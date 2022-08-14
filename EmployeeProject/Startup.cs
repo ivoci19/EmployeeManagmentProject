@@ -1,22 +1,21 @@
-using EmployeeProject.Authorization;
-using EmployeeProject.IdentityServer;
 using EmployeesData;
 using EmployeesData.Models;
-using IdentityServer4.AccessTokenValidation;
+using EmployeesData.Repositories;
+using EmployeeServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace EmployeeProject
@@ -33,60 +32,60 @@ namespace EmployeeProject
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration["ConnectionStrings:MainConnection"],b => b.MigrationsAssembly("EmployeesData")));
+           
+            services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration["ConnectionStrings:MainConnection"], b => b.MigrationsAssembly("EmployeesData")));
 
-            services.AddIdentity<ApplicationUser, ApplicationRole>()
-                     .AddEntityFrameworkStores<ApplicationDbContext>()
-                      .AddDefaultTokenProviders();
-
-            var identityServerBuilder = services.AddIdentityServer()
-                                        .AddInMemoryPersistedGrants()
-                                        .AddInMemoryIdentityResources(IdentityServerConfig.GetIdentityResources())
-                                        .AddInMemoryApiScopes(IdentityServerConfig.GetApiScopes())
-                                        .AddInMemoryApiResources(IdentityServerConfig.GetApiResources())
-                                        .AddInMemoryClients(IdentityServerConfig.GetClients())
-                                        .AddAspNetIdentity<ApplicationUser>()
-                                        .AddProfileService<ProfileService>();
-
-            identityServerBuilder.AddDeveloperSigningCredential();
-
-            var applicationUrl = Configuration["ServerUrl"];
-
-            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-                .AddIdentityServerAuthentication(options =>
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    options.Authority = applicationUrl;
-                    options.SupportedTokens = SupportedTokens.Jwt;
-                    options.RequireHttpsMetadata = false;  
-                    options.ApiName = IdentityServerConfig.ApiName;
-                    options.SaveToken = true;
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = Configuration["Jwt:Issuer"],
+                        ValidAudience = Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration
+                            ["Jwt:Key"]))
+                    };
                 });
 
+            services.AddMvc();
             services.AddAuthorization();
 
             services.AddControllers();
-            
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EmployeeProject", Version = "v1" });
-                c.OperationFilter<AuthorizeCheckOperationFilter>();
-                c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Type = SecuritySchemeType.OAuth2,
-                    Flows = new OpenApiOAuthFlows
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Scheme = "bearer",
+                    Description = "Please insert JWT token into field"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
                     {
-                        Password = new OpenApiOAuthFlow
+                        new OpenApiSecurityScheme
                         {
-                            TokenUrl = new Uri("/connect/token", UriKind.Relative),
-                            Scopes = new Dictionary<string, string>
+                            Reference = new OpenApiReference
                             {
-                                {IdentityServerConfig.ApiName, IdentityServerConfig.ApiFriendlyName}
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
                             }
-                        }
+                        },
+                        new string[] { }
                     }
                 });
             });
 
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddEmployeeServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,21 +95,20 @@ namespace EmployeeProject
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => { 
+                app.UseSwaggerUI(c =>
+                {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "EmployeeProject v1");
-                    c.OAuthClientId(IdentityServerConfig.SwaggerClientID);
-                    c.OAuthClientSecret("no_password"); 
+                    c.OAuthClientSecret("no_password");
                 });
+
             }
 
             app.UseHttpsRedirection();
 
-            app.UseRouting();
 
-            app.UseAuthorization();
-
-            app.UseIdentityServer();
             app.UseAuthentication();
+            app.UseRouting();
+            app.UseAuthorization();
 
 
             app.UseEndpoints(endpoints =>

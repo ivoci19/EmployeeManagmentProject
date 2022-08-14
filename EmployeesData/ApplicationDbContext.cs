@@ -10,12 +10,13 @@ using ProjectTask = EmployeesData.Models.ProjectTask;
 
 namespace EmployeesData
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
+    public class ApplicationDbContext : DbContext
     {
 
         public DbSet<Project> Projects { get; set; }
-        public DbSet<ProjectTask> Tasks { get; set; }
+        public DbSet<ProjectTask> ProjectTasks { get; set; }
         public DbSet<Department> Departments { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option) : base(option)
         {
