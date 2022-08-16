@@ -11,6 +11,7 @@ namespace EmployeesData.IRepositories
     {
         List<Project> Projects { get; }
         public void SaveProject(Project project);
-        public bool DeleteProject(int projectId);
+        public bool DeleteProject(int id);
+        public Project GetProjectById(int id);
     }
 }

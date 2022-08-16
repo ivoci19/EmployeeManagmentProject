@@ -21,7 +21,7 @@ namespace EmployeeServices
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IProjectServices, ProjectServices>();
 
-            services.AddScoped<ITaskRepository, TaskRepository>();
+            services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
             services.AddScoped<ITaskServices, TaskServices>();
         }
     }

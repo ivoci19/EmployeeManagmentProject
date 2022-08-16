@@ -23,11 +23,14 @@ namespace SharedModels.ViewModels
         public string Email { get; set; }
         [Required(ErrorMessage = "An Address is required")]
         public string Address { get; set; }
-        public string RoleName { get; set; }
+        [Required(ErrorMessage = "A Photo is required")]
+        public string Photo { get; set; }
     }
     public class UserViewModel : UserBaseViewModel
     {
         public int Id { get; set; }
+        [Required]
+        public string RoleName { get; set; }
     }
 
     public class UserEditViewModel : UserBaseViewModel { 

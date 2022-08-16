@@ -6,11 +6,18 @@ using System.Threading.Tasks;
 
 namespace SharedModels.ViewModels
 {
-    public class ProjectViewModel
+    public class ProjectBaseViewModel
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Code { get; set; }
+    }
+    public class ProjectViewModel : ProjectBaseViewModel
+    {
+        public int Id { get; set; }
+
+    }
+    public class ProjectEditViewModel : ProjectBaseViewModel
+    {
     }
 }

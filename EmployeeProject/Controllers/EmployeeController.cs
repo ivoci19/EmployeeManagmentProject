@@ -6,7 +6,7 @@ namespace EmployeeProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize("Employee")]
+    [Authorize(Roles = "Employee")]
     public class EmployeeController : ControllerBase
     {
     }

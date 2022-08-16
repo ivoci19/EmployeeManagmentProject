@@ -16,9 +16,13 @@ namespace EmployeeProject.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IUserServices _userServices;
-        public AdminController( IUserServices userServices)
+        private readonly IProjectServices _projectServices;
+        private readonly ITaskServices _taskServices;
+        public AdminController( IUserServices userServices, IProjectServices projectServices, ITaskServices taskServices)
         {
             _userServices = userServices;
+            _projectServices = projectServices;
+            _taskServices = taskServices;
         }
 
         [HttpGet("GetAllUsers")]
@@ -107,6 +111,181 @@ namespace EmployeeProject.Controllers
 
                 _userServices.DeleteUser(id);
                 return Ok(user);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+        [HttpGet("GetAllProjects")]
+        public IActionResult GetAllProjects()
+        {
+            try
+            {
+                var projects = _projectServices.GetAllProjects();
+                return Ok(projects);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+        [HttpGet("GetProject{id:int}")]
+        public IActionResult GetProject(int id)
+        {
+            try
+            {
+                var project = _projectServices.GetProjectById(id);
+                return Ok(project);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpPost("CreateProject")]
+        public ActionResult CreateProject(ProjectEditViewModel project)
+        {
+            try
+            {
+                if (project == null)
+                    return BadRequest();
+
+                var createdProject = _projectServices.CreateProject(project);
+
+                return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, createdProject);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+        [HttpPut("UpdateProject{id:int}")]
+        public IActionResult UpdateProject(int id, ProjectEditViewModel project)
+        {
+            try
+            {
+                var projectToUpdate = _projectServices.GetProjectById(id);
+
+                if (projectToUpdate == null)
+                    return NotFound("Project with Id = " + id.ToString() + " not found");
+
+                if (project == null)
+                    return BadRequest();
+
+                return Ok(_projectServices.UpdateProject(project, id));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpDelete("DeleteProject{id:int}")]
+        public IActionResult DeleteProject(int id)
+        {
+            try
+            {
+                var project = _projectServices.GetProjectById(id);
+                if (project == null)
+                    return NotFound("Project with Id = " + id.ToString() + " not found");
+
+                _projectServices.DeleteProject(id);
+                return Ok(project);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpGet("GetAllTasks")]
+        public IActionResult GetAllTasks()
+        {
+            try
+            {
+                var tasks = _taskServices.GetAllTasks();
+                return Ok(tasks);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+        [HttpGet("GetTask{id:int}")]
+        public IActionResult GetTask(int id)
+        {
+            try
+            {
+                var task = _taskServices.GetTaskById(id);
+                return Ok(task);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpPost("CreateTask")]
+        public ActionResult CreateTask(ProjectTaskEditViewModel task)
+        {
+            try
+            {
+                if (task == null)
+                    return BadRequest();
+
+                var createdTask = _taskServices.CreateTask(task);
+
+                return CreatedAtAction(nameof(GetTask), new { id = createdTask.Id }, createdTask);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+        [HttpPut("UpdateTask{id:int}")]
+        public IActionResult UpdateTask(int id, ProjectTaskEditViewModel task)
+        {
+            try
+            {
+                var taskToUpdate = _taskServices.GetTaskById(id);
+
+                if (taskToUpdate == null)
+                    return NotFound("Task with Id = " + id.ToString() + " not found");
+
+                if (task == null)
+                    return BadRequest();
+
+                return Ok(_taskServices.UpdateTask(task, id));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpDelete("DeleteTask{id:int}")]
+        public IActionResult DeleteTask(int id)
+        {
+            try
+            {
+                var task = _taskServices.GetTaskById(id);
+                if (task == null)
+                    return NotFound("Task with Id = " + id.ToString() + " not found");
+
+                _taskServices.DeleteTask(id);
+                return Ok(task);
             }
             catch (Exception e)
             {

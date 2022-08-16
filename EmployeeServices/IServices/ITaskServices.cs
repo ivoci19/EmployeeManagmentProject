@@ -9,10 +9,10 @@ namespace EmployeeServices.IServices
 {
     public interface ITaskServices
     {
-        public ProjectTasksViewModel GetTaskById(int id);
-        public ProjectTasksViewModel CreateTask(ProjectTasksViewModel task);
-        public ProjectTasksViewModel UpdateTask(ProjectTasksViewModel task);
-        public bool DeleteTask(ProjectTasksViewModel task);
-        public List<ProjectTasksViewModel> GetAllProjects();
+        public ProjectTaskViewModel GetTaskById(int id);
+        public ProjectTaskViewModel CreateTask(ProjectTaskEditViewModel task);
+        public ProjectTaskViewModel UpdateTask(ProjectTaskEditViewModel taskData, int id);
+        public bool DeleteTask(int id);
+        public IEnumerable<ProjectTaskViewModel> GetAllTasks();
     }
 }

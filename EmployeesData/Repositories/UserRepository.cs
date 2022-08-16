@@ -28,14 +28,18 @@ namespace EmployeesData.Repositories
             if (user.Id == 0)
             {
                 user.Password = Encryptor.MD5Hash(user.Password);
+                user.RoleId = 1;
+                user.CreatedBy = 1; 
+                user.IsActive = true;
                 _applicationDbContext.Users.Add(user);
             }
+            user.UpdatedBy = 1;
             _applicationDbContext.SaveChanges();
         }
 
         public bool DeleteUser(int id)
         {
-            User user = _applicationDbContext.Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            User user = Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
             
             if (user != null)
             {
@@ -49,20 +53,20 @@ namespace EmployeesData.Repositories
         public User GetUserByUsernameAndPassword(string username, string password)
         {
             var pass = Encryptor.MD5Hash(password);
-            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Username == username && i.IsActive && i.Password == pass).FirstOrDefault();
+            User user = Users.Where(i => i.Username == username && i.IsActive && i.Password == pass).FirstOrDefault();
             return user;
         }
 
         public User GetUserByEmail(string email)
         {
-            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Email == email && i.IsActive).FirstOrDefault();
+            User user = Users.Where(i => i.Email == email && i.IsActive).FirstOrDefault();
             return user;
 
         }
 
         public User GetUserById(int id)
         {
-            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            User user = Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
             return user;
         }
 

@@ -18,6 +18,11 @@ namespace EmployeeServices.Helpers
             CreateMap<User, UserViewModel>()
                .ForPath(dest => dest.RoleName, act => act.MapFrom(src => src.Role.RoleName));
 
+            CreateMap<Project, ProjectViewModel>();
+            CreateMap<ProjectEditViewModel, Project>();
+
+            CreateMap<ProjectTask, ProjectTaskViewModel>();
+            CreateMap<ProjectTaskEditViewModel, ProjectTask>();
         }
     }
 }

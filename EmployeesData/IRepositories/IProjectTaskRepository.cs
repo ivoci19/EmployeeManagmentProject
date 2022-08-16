@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace EmployeesData.IRepositories
 {
-    public interface ITaskRepository
+    public interface IProjectTaskRepository
     {
         List<ProjectTask> ProjectTasks { get; }
-        public void SaveTask(ProjectTask task);
-        public bool DeleteProject(int prjectId);
+        public void SaveTask(ProjectTask projectTask);
+        public bool DeleteTask(int id);
+        public ProjectTask GetTaskById(int id);
     }
 }

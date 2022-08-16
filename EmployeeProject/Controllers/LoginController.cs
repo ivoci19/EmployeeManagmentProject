@@ -57,12 +57,12 @@ namespace EmployeeProject.Controllers
               claims,
               expires: DateTime.Now.AddMinutes(15),
               signingCredentials: credentials);
+
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            return new LoginTokens { Token = tokenHandler.WriteToken(token) };
+            return new LoginTokens { Token = tokenHandler.WriteToken(token),
+                                     ExpirationDate = DateTime.Now.AddMinutes(15) };
         }
-
-
 
         private UserViewModel Authenticate(UserLogin userLogin)
         {

@@ -22,29 +22,50 @@ namespace EmployeeServices.Services
             _mapper = mapper;
         }
 
-        public ProjectViewModel CreateProject(ProjectViewModel project)
+        public ProjectViewModel CreateProject(ProjectEditViewModel projectVm)
         {
-            throw new NotImplementedException();
+            Project project = _mapper.Map<Project>(projectVm);
+            _projectRepository.SaveProject(project);
+            return _mapper.Map<ProjectViewModel>(project);
         }
 
         public bool DeleteProject(int id)
         {
-            throw new NotImplementedException();
+            Project project = _projectRepository.Projects.FirstOrDefault(u => u.Id == id);
+
+            if (project != null)
+            {
+                return _projectRepository.DeleteProject(id);
+            }
+            return false;
         }
 
         public IEnumerable<ProjectViewModel> GetAllProjects()
         {
-            throw new NotImplementedException();
+            var project = _projectRepository.Projects;
+
+            return _mapper.Map<IEnumerable<ProjectViewModel>>(project); ;
         }
 
         public ProjectViewModel GetProjectById(int id)
         {
-            throw new NotImplementedException();
+            Project project = _projectRepository.GetProjectById(id);
+            return _mapper.Map<ProjectViewModel>(project);
         }
 
-        public ProjectViewModel UpdateProject(ProjectViewModel project)
+        public ProjectViewModel UpdateProject(ProjectEditViewModel projectData, int id)
         {
-            throw new NotImplementedException();
+            Project project = _projectRepository.Projects.FirstOrDefault(e => e.Id == id);
+
+            if (project != null)
+            {
+                _mapper.Map(projectData, project);
+                _projectRepository.SaveProject(project);
+                var projectVm = _mapper.Map<ProjectViewModel>(project);
+                return projectVm;
+            }
+
+            return null;
         }
     }
 }

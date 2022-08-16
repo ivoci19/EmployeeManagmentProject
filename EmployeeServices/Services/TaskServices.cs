@@ -1,4 +1,6 @@
-﻿using EmployeesData.IRepositories;
+﻿using AutoMapper;
+using EmployeesData.IRepositories;
+using EmployeesData.Models;
 using EmployeeServices.IServices;
 using SharedModels.ViewModels;
 using System;
@@ -12,35 +14,60 @@ namespace EmployeeServices.Services
     public class TaskServices : ITaskServices
     {
 
-        private readonly ITaskRepository _taskRepository;
-        public TaskServices(ITaskRepository taskRepository)
+        private readonly IProjectTaskRepository _taskRepository;
+        private readonly IMapper _mapper;
+
+        public TaskServices(IProjectTaskRepository taskRepository, IMapper mapper)
         {
+            _mapper = mapper;
             _taskRepository = taskRepository;
         }
 
-        public ProjectTasksViewModel CreateTask(ProjectTasksViewModel task)
+
+        public ProjectTaskViewModel CreateTask(ProjectTaskEditViewModel taskVm)
         {
-            throw new NotImplementedException();
+            ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
+            _taskRepository.SaveTask(task);
+            return _mapper.Map<ProjectTaskViewModel>(task);
         }
 
-        public bool DeleteTask(ProjectTasksViewModel task)
+        public bool DeleteTask(int id)
         {
-            throw new NotImplementedException();
+            ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(u => u.Id == id);
+
+            if (task != null)
+            {
+                return _taskRepository.DeleteTask(id);
+            }
+            return false;
         }
 
-        public List<ProjectTasksViewModel> GetAllProjects()
+        public IEnumerable<ProjectTaskViewModel> GetAllTasks()
         {
-            throw new NotImplementedException();
+            var tasks = _taskRepository.ProjectTasks;
+
+            return _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks); 
         }
 
-        public ProjectTasksViewModel GetTaskById(int id)
+        public ProjectTaskViewModel GetTaskById(int id)
         {
-            throw new NotImplementedException();
+            ProjectTask task = _taskRepository.GetTaskById(id);
+            return _mapper.Map<ProjectTaskViewModel>(task);
         }
 
-        public ProjectTasksViewModel UpdateTask(ProjectTasksViewModel task)
+        public ProjectTaskViewModel UpdateTask(ProjectTaskEditViewModel taskData, int id)
         {
-            throw new NotImplementedException();
+            ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(e => e.Id == id);
+
+            if (task != null)
+            {
+                _mapper.Map(taskData, task);
+                _taskRepository.SaveTask(task);
+                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                return taskVm;
+            }
+
+            return null;
         }
     }
 }
