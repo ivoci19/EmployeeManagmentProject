@@ -13,7 +13,10 @@ namespace EmployeeServices.Helpers
     {
         public ApplicationMapper()
         {
-            CreateMap<User, UserViewModel>().ReverseMap();
+            CreateMap<User, UserViewModel>();
+            CreateMap<UserEditViewModel, User>();
+            CreateMap<User, UserViewModel>()
+               .ForPath(dest => dest.RoleName, act => act.MapFrom(src => src.Role.RoleName));
 
         }
     }

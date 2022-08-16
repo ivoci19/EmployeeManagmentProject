@@ -1,6 +1,7 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using Microsoft.EntityFrameworkCore;
+using SharedModels.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,55 @@ namespace EmployeesData.Repositories
 
         public UserRepository(ApplicationDbContext applicationDbContext)
         {
-               _applicationDbContext = applicationDbContext;
+            _applicationDbContext = applicationDbContext;
         }
         public List<User> Users
         {
-            get { return _applicationDbContext.Users.ToList(); }
+            get { return _applicationDbContext.Users.Include(i => i.Role).Where(i => i.IsActive).ToList(); }
         }
+
+        public void SaveUser(User user)
+        {
+            if (user.Id == 0)
+            {
+                user.Password = Encryptor.MD5Hash(user.Password);
+                _applicationDbContext.Users.Add(user);
+            }
+            _applicationDbContext.SaveChanges();
+        }
+
+        public bool DeleteUser(int id)
+        {
+            User user = _applicationDbContext.Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            
+            if (user != null)
+            {
+                user.IsActive = false;
+                _applicationDbContext.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
+        public User GetUserByUsernameAndPassword(string username, string password)
+        {
+            var pass = Encryptor.MD5Hash(password);
+            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Username == username && i.IsActive && i.Password == pass).FirstOrDefault();
+            return user;
+        }
+
+        public User GetUserByEmail(string email)
+        {
+            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Email == email && i.IsActive).FirstOrDefault();
+            return user;
+
+        }
+
+        public User GetUserById(int id)
+        {
+            User user = _applicationDbContext.Users.Include(i => i.Role).Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            return user;
+        }
+
     }
 }

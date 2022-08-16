@@ -20,5 +20,15 @@ namespace EmployeesData.Repositories
         {
             get { return _applicationDbContext.ProjectTasks.ToList(); }
         }
+
+        public bool DeleteProject(int prjectId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SaveTask(ProjectTask task)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

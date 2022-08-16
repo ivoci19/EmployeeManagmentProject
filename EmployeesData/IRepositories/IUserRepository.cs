@@ -10,5 +10,10 @@ namespace EmployeesData.IRepositories
     public interface IUserRepository
     {
         List<User> Users { get; }
+        public void SaveUser(User user);
+        public User GetUserByUsernameAndPassword(string username, string password);
+        public User GetUserByEmail(string email);
+        public User GetUserById(int id);
+        public bool DeleteUser(int UserId);
     }
 }

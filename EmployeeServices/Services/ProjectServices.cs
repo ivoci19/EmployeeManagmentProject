@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EmployeesData.IRepositories;
+using EmployeesData.Models;
 using EmployeeServices.IServices;
 using SharedModels.ViewModels;
 using System;
@@ -12,7 +13,6 @@ namespace EmployeeServices.Services
 {
     public class ProjectServices : IProjectServices
     {
-
         private readonly IProjectRepository _projectRepository;
         private readonly IMapper _mapper;
 
@@ -27,12 +27,12 @@ namespace EmployeeServices.Services
             throw new NotImplementedException();
         }
 
-        public bool DeleteProject(ProjectViewModel project)
+        public bool DeleteProject(int id)
         {
             throw new NotImplementedException();
         }
 
-        public List<ProjectViewModel> GetAllProjects()
+        public IEnumerable<ProjectViewModel> GetAllProjects()
         {
             throw new NotImplementedException();
         }

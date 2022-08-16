@@ -12,11 +12,10 @@ namespace EmployeesData
 {
     public class ApplicationDbContext : DbContext
     {
-
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectTask> ProjectTasks { get; set; }
-        public DbSet<Department> Departments { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option) : base(option)
         {

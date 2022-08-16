@@ -16,9 +16,17 @@ namespace EmployeesData.Repositories
         {
             _applicationDbContext = applicationDbContext;
         }
-        public List<Project> Projects
+
+        public List<Project> Projects => throw new NotImplementedException();
+
+        public bool DeleteProject(int projectId)
         {
-            get { return _applicationDbContext.Projects.ToList(); }
+            throw new NotImplementedException();
+        }
+
+        public void SaveProject(Project project)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -10,5 +10,7 @@ namespace EmployeesData.IRepositories
     public interface IProjectRepository
     {
         List<Project> Projects { get; }
+        public void SaveProject(Project project);
+        public bool DeleteProject(int projectId);
     }
 }

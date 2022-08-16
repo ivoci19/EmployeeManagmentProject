@@ -11,10 +11,11 @@ namespace EmployeeServices.IServices
     {
         public UserViewModel GetUserByUsernameAndPassword(string username, string password);
         public UserViewModel GetUserById(int id);
-        public UserViewModel CreateUser(UserViewModel user);
-        public UserViewModel UpdateUser(UserViewModel user);
-        public bool DeleteUser(UserViewModel user);
+        public UserViewModel CreateUser(UserEditViewModel user);
+        public UserViewModel UpdateUser(UserEditViewModel user, int id);
+        public bool DeleteUser(int id);
         public IEnumerable<UserViewModel> GetAllUsers();
+        public bool GetByEmail(string email);
 
 
     }
