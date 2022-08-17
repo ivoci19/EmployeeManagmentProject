@@ -1,5 +1,6 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace EmployeesData.Repositories
         }
         public List<ProjectTask> ProjectTasks
         {
-            get { return _applicationDbContext.ProjectTasks.Where(i => i.IsActive).ToList(); }
+            get { return _applicationDbContext.ProjectTasks.Include(i => i.Project).Include(i => i.User).Where(i => i.IsActive).ToList(); }
         }
 
         public bool DeleteTask(int id)

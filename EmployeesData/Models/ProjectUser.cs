@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EmployeesData.Models
 {
-    internal class ProjectUser
+    public class ProjectUser
     {
         public int ProjectsId { get; set; }
         public int UsersId { get; set; }

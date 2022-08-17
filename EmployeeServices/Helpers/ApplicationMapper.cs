@@ -21,7 +21,9 @@ namespace EmployeeServices.Helpers
             CreateMap<Project, ProjectViewModel>();
             CreateMap<ProjectEditViewModel, Project>();
 
-            CreateMap<ProjectTask, ProjectTaskViewModel>();
+            CreateMap<ProjectTask, ProjectTaskViewModel>()
+                .ForPath(dest => dest.Username, act => act.MapFrom(src => src.User.Username))
+                .ForPath(dest => dest.ProjectName, act => act.MapFrom(src => src.Project.Name));
             CreateMap<ProjectTaskEditViewModel, ProjectTask>();
         }
     }
