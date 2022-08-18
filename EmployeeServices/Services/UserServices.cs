@@ -54,9 +54,9 @@ namespace EmployeeServices.Services
         }
 
         
-        public bool GetByEmail(string email)
+        public bool GetUserByUsername(string username)
         {
-            User user = _userRepository.GetUserByEmail(email);
+            User user = _userRepository.GetUserByUsername(username);
             if (user != null)
                 return true;
             return false;
@@ -65,7 +65,7 @@ namespace EmployeeServices.Services
         
         public UserViewModel GetUserById(int id)
         {
-            User user = _userRepository.GetUserById(id);
+            User user = _userRepository.GetUserById(id, false);
             return _mapper.Map<UserViewModel>(user);
 
         }
@@ -76,11 +76,12 @@ namespace EmployeeServices.Services
             return _mapper.Map<UserViewModel>(user);
         }
 
-        //DONE
         public UserViewModel UpdateUser(UserEditViewModel userData, int id)
         {
             User user = _userRepository.Users.FirstOrDefault(e => e.Id == id);
-            
+            user.Password = Encryptor.MD5Hash(user.Password);
+
+
             if (user != null)
             {
                 _mapper.Map(userData, user);
@@ -90,6 +91,12 @@ namespace EmployeeServices.Services
             }
 
             return null;
+        }
+
+        public UserViewModel GetLoggedInUser(string username)
+        {
+            User user = _userRepository.GetUserByUsername(username);
+            return _mapper.Map<UserViewModel>(user);
         }
     }
 }

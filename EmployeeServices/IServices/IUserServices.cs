@@ -15,8 +15,8 @@ namespace EmployeeServices.IServices
         public UserViewModel UpdateUser(UserEditViewModel user, int id);
         public bool DeleteUser(int id);
         public IEnumerable<UserViewModel> GetAllUsers();
-        public bool GetByEmail(string email);
-
+        public bool GetUserByUsername(string usernamee);
+        public UserViewModel GetLoggedInUser(string username);
 
     }
 }

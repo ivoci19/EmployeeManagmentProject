@@ -13,5 +13,7 @@ namespace EmployeesData.IRepositories
         public void SaveTask(ProjectTask projectTask);
         public bool DeleteTask(int id);
         public ProjectTask GetTaskById(int id);
+        public ProjectTask GetTaskByIdAndUserId(int id, int UserId);
+        public IEnumerable<ProjectTask> GetTasksByUserId(int UserId);
     }
 }

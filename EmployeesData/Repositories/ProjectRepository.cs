@@ -1,5 +1,6 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +20,16 @@ namespace EmployeesData.Repositories
 
         public List<Project> Projects
         {
-            get { return _applicationDbContext.Projects.Where(i => i.IsActive).ToList(); }
+            get { return _applicationDbContext.Projects
+                    .Include(i => i.ProjectTasks)
+                    .Include(i => i.Users)
+                    .Where(i => i.IsActive).ToList(); }
         }
 
         public bool DeleteProject(int id)
         {
             Project project = Projects.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-
+            //Nese projekti ka taske te hapura (dmth ne enum pending dhe in progress nuk mund te fshihet)
             if (project != null)
             {
                 project.IsActive = false;
@@ -39,11 +43,9 @@ namespace EmployeesData.Repositories
         {
             if (project.Id == 0)
             {
-                project.CreatedBy = 1; 
                 project.IsActive = true;
                 _applicationDbContext.Projects.Add(project);
             }
-            project.UpdatedBy = 1;
             _applicationDbContext.SaveChanges();
         }
         public Project GetProjectById(int id)
@@ -51,5 +53,14 @@ namespace EmployeesData.Repositories
             Project project = Projects.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
             return project;
         }
+
+        public IEnumerable<Project> GetProjectsByUserId(int employeeId)
+        {
+            IEnumerable<Project> projects = _applicationDbContext.Projects
+                .Include(i => i.Users)
+                .Where(p => p.Users.Any(proj => proj.Id == employeeId));
+            return projects;
+        }
+
     }
 }

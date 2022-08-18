@@ -2,6 +2,7 @@
 using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using EmployeeServices.IServices;
+using SharedModels.Enum;
 using SharedModels.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -66,8 +67,44 @@ namespace EmployeeServices.Services
                 var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
                 return taskVm;
             }
+            return null;
+        }
+
+        public ProjectTaskViewModel ChangeTaskStatus(int id, TaskStatusEnum status)
+        {
+            ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(e => e.Id == id);
+
+            if (task != null)
+            {
+                task.TaskStatus = status;
+                _mapper.Map< ProjectTaskViewModel>(task);
+                _taskRepository.SaveTask(task);
+                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                return taskVm;
+            }
 
             return null;
         }
+
+        public ProjectTaskViewModel GetTaskByIdAndUserId(int TaskId, int UserId)
+        {
+            ProjectTask task = _taskRepository.GetTaskByIdAndUserId(TaskId, UserId);
+            return _mapper.Map<ProjectTaskViewModel>(task);
+        }
+
+        public ProjectTaskViewModel ChangeTaskStatus(ProjectTaskViewModel taskVm,int TaskId)
+        {
+            ProjectTask task = _taskRepository.GetTaskById(TaskId);
+            task.TaskStatus = TaskStatusEnum.DONE;
+            _taskRepository.SaveTask(task);
+            return _mapper.Map<ProjectTaskViewModel>(task); 
+        }
+
+        public IEnumerable<ProjectTaskViewModel> GetTasks(int UserId)
+        {
+            IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksByUserId(UserId);
+            return _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks);
+        }
+
     }
 }

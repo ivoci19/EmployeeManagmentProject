@@ -32,7 +32,7 @@ namespace EmployeeProject
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           
+            services.AddHttpContextAccessor();
             services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration["ConnectionStrings:MainConnection"], b => b.MigrationsAssembly("EmployeesData")));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

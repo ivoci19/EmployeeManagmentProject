@@ -20,20 +20,21 @@ namespace EmployeesData.Repositories
         }
         public List<User> Users
         {
-            get { return _applicationDbContext.Users.Include(i => i.Role).Where(i => i.IsActive).ToList(); }
+            get { return _applicationDbContext.Users
+                         .Include(i => i.Role)
+                         .Include(i => i.Projects)
+                         .Include(i => i.ProjectTasks)
+                         .Where(i => i.IsActive).ToList(); }
         }
 
         public void SaveUser(User user)
         {
             if (user.Id == 0)
             {
-                user.Password = Encryptor.MD5Hash(user.Password);
                 user.RoleId = 1;
-                user.CreatedBy = 1; 
                 user.IsActive = true;
                 _applicationDbContext.Users.Add(user);
             }
-            user.UpdatedBy = 1;
             _applicationDbContext.SaveChanges();
         }
 
@@ -57,16 +58,21 @@ namespace EmployeesData.Repositories
             return user;
         }
 
-        public User GetUserByEmail(string email)
+        public User GetUserByUsername(string username)
         {
-            User user = Users.Where(i => i.Email == email && i.IsActive).FirstOrDefault();
+            User user = Users.Where(i => i.Username == username && i.IsActive).FirstOrDefault();
             return user;
 
         }
 
-        public User GetUserById(int id)
+        public User GetUserById(int userId, bool includeProjects)
         {
-            User user = Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            var query = _applicationDbContext.Users.AsQueryable();
+            if (includeProjects)
+                query = query.Include(i => i.Projects);
+
+            query = query.Where(u => u.Id == userId && u.IsActive);
+            var user = query.FirstOrDefault();
             return user;
         }
 

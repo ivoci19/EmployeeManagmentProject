@@ -49,7 +49,7 @@ namespace EmployeeProject.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.GivenName, user.FirstName),
-                new Claim(ClaimTypes.Role, user.RoleName)
+                new Claim(ClaimTypes.Role, user.RoleName),
             };
 
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],

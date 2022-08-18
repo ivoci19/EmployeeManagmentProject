@@ -14,11 +14,13 @@ namespace EmployeeServices.Services
     public class ProjectServices : IProjectServices
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public ProjectServices(IProjectRepository projectRepository, IMapper mapper)
+        public ProjectServices(IProjectRepository projectRepository, IUserRepository userRepository, IMapper mapper)
         {
             _projectRepository = projectRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
@@ -32,7 +34,7 @@ namespace EmployeeServices.Services
         public bool DeleteProject(int id)
         {
             Project project = _projectRepository.Projects.FirstOrDefault(u => u.Id == id);
-
+            
             if (project != null)
             {
                 return _projectRepository.DeleteProject(id);
@@ -66,6 +68,12 @@ namespace EmployeeServices.Services
             }
 
             return null;
+        }
+
+        public IEnumerable<ProjectViewModel> GetEmployeeProjects(int userId)
+        {
+            IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(userId);
+            return _mapper.Map<IEnumerable<ProjectViewModel>>(projects);
         }
     }
 }

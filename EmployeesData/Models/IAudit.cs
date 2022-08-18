@@ -8,10 +8,10 @@ namespace EmployeesData.Models
 {
     public interface IAudit
     {
-        int CreatedBy { get; set; }
+        string CreatedBy { get; set; }
         DateTime CreatedDate { get; set; }  
         DateTime UpdatedDate { get; set; }
-        int UpdatedBy { get; set; }
+        string UpdatedBy { get; set; }
         bool IsActive { get; set; }
     }
 }

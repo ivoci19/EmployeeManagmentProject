@@ -4,6 +4,7 @@ using EmployeeServices.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels.Enum;
 using SharedModels.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,8 @@ namespace EmployeeProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administrator")]
+    //Ka te beje kjo? qe e kisha si koment
     public class AdminController : ControllerBase
     {
         private readonly IUserServices _userServices;
@@ -62,10 +64,10 @@ namespace EmployeeProject.Controllers
                 if (user == null)
                     return BadRequest();
 
-                bool duplicateEmail = _userServices.GetByEmail(user.Email);
-                if (duplicateEmail)
+                bool duplicateUsername = _userServices.GetUserByUsername(user.Username);
+                if (duplicateUsername)
                 {
-                    ModelState.AddModelError("email", "Email " + user.Email + " is already in use.");
+                    ModelState.AddModelError("username", "Username " + user.Username + " is already in use.");
                     return BadRequest(ModelState);
                 }
 
@@ -293,6 +295,37 @@ namespace EmployeeProject.Controllers
             }
         }
 
+        [HttpPost("AddEmployeeToProject")]
+        public ActionResult AddEmployeeToProject(int EmployeeId, int ProjectId)
+        {
+            return null;
+        }
+
+        [HttpDelete("RemoveEmployeeFromProject")]
+        public ActionResult RemoveEmployeeFromProject(int EmployeeId, int ProjectId)
+        {
+            return null;
+        }
+
+
+        [HttpPut("ChangeTaskStatus{id:int}")]
+        public IActionResult ChangeTaskStatus(int id, TaskStatusEnum status)
+        {
+            try
+            {
+                var taskToUpdate = _taskServices.GetTaskById(id);
+
+                if (taskToUpdate == null)
+                    return NotFound("Task with Id = " + id.ToString() + " not found");
+
+                return Ok(_taskServices.ChangeTaskStatus(id, status));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+        }
 
     }
 }

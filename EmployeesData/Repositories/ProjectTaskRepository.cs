@@ -39,16 +39,24 @@ namespace EmployeesData.Repositories
         {
             if (projectTask.Id == 0)
             {
-                projectTask.CreatedBy = 1; 
                 projectTask.IsActive = true;
                 _applicationDbContext.ProjectTasks.Add(projectTask);
             }
-            projectTask.UpdatedBy = 1;
             _applicationDbContext.SaveChanges();
         }
         public ProjectTask GetTaskById(int id)
         {
             ProjectTask projectTask = ProjectTasks.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            return projectTask;
+        }
+        public ProjectTask GetTaskByIdAndUserId(int id, int UserId)
+        {
+            ProjectTask projectTask = ProjectTasks.Where(i => i.Id == id && i.IsActive && i.AssignedTo == UserId).FirstOrDefault();
+            return projectTask;
+        }
+        public IEnumerable<ProjectTask> GetTasksByUserId(int UserId)
+        {
+            IEnumerable<ProjectTask> projectTask = ProjectTasks.Where(i => i.IsActive && i.AssignedTo == UserId);
             return projectTask;
         }
     }
