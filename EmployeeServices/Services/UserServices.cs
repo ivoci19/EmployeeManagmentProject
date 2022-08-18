@@ -65,7 +65,7 @@ namespace EmployeeServices.Services
         
         public UserViewModel GetUserById(int id)
         {
-            User user = _userRepository.GetUserById(id, false);
+            User user = _userRepository.GetUserById(id, false, false);
             return _mapper.Map<UserViewModel>(user);
 
         }

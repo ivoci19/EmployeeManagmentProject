@@ -32,6 +32,15 @@ namespace EmployeesData
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<User>()
+           .HasIndex(b => b.Username)
+           .IsUnique();
+            builder.Entity<User>()
+            .HasIndex(b => b.Email)
+            .IsUnique();
+            builder.Entity<Project>()
+            .HasIndex(b => b.Code)
+            .IsUnique();
             base.OnModelCreating(builder);
         }
 

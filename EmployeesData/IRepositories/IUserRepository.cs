@@ -13,7 +13,7 @@ namespace EmployeesData.IRepositories
         public void SaveUser(User user);
         public User GetUserByUsernameAndPassword(string username, string password);
         public User GetUserByUsername(string username);
-        public User GetUserById(int id, bool includeProject);
+        public User GetUserById(int id, bool includeProject, bool includeTask);
         public bool DeleteUser(int UserId);
    
 

@@ -65,13 +65,13 @@ namespace EmployeesData.Repositories
 
         }
 
-        public User GetUserById(int userId, bool includeProjects)
+        public User GetUserById(int userId, bool includeProjects, bool includeTask)
         {
             var query = _applicationDbContext.Users.AsQueryable();
             if (includeProjects)
                 query = query.Include(i => i.Projects);
 
-            query = query.Where(u => u.Id == userId && u.IsActive);
+            query = query.Include(i => i.Role).Where(u => u.Id == userId && u.IsActive);
             var user = query.FirstOrDefault();
             return user;
         }
