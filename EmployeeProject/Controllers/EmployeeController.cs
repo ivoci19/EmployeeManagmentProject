@@ -45,7 +45,7 @@ namespace EmployeeProject.Controllers
             try
             {
                 int id = GetCurrentUser().Id;
-                var userToUpdate = _userServices.GetUserById(id);
+                var userToUpdate = _userServices.GetUserById(id,false,false);
 
                 if (userToUpdate == null)
                     return NotFound("User with Id = " + id.ToString() + " not found");
@@ -80,7 +80,6 @@ namespace EmployeeProject.Controllers
         [HttpPost("CreateTask")]
         public ActionResult CreateTask(ProjectTaskEditViewModel task)
         {
-            //Create these tasks and assign to other employees that are part of the project
             return null;
         }
 

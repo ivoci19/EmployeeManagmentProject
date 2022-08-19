@@ -63,9 +63,9 @@ namespace EmployeeServices.Services
         }
 
         
-        public UserViewModel GetUserById(int id)
+        public UserViewModel GetUserById(int id,bool includeProjects,bool includeTasks)
         {
-            User user = _userRepository.GetUserById(id, false, false);
+            User user = _userRepository.GetUserById(id, includeProjects, includeTasks);
             return _mapper.Map<UserViewModel>(user);
 
         }
@@ -75,6 +75,8 @@ namespace EmployeeServices.Services
             User user = _userRepository.GetUserByUsernameAndPassword(username, password);
             return _mapper.Map<UserViewModel>(user);
         }
+
+
 
         public UserViewModel UpdateUser(UserEditViewModel userData, int id)
         {

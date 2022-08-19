@@ -8,6 +8,7 @@ using SharedModels.Enum;
 using SharedModels.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EmployeeProject.Controllers
 {
@@ -43,11 +44,11 @@ namespace EmployeeProject.Controllers
 
 
         [HttpGet("GetUser{id:int}")]
-        public IActionResult GetUser(int id)
+        public ActionResult<User> GetUser(int id)
         {
             try
             {
-                var user = _userServices.GetUserById(id);
+                var user = _userServices.GetUserById(id,true,true);
                 return Ok(user);
             }
             catch (Exception e)
@@ -86,7 +87,7 @@ namespace EmployeeProject.Controllers
         {
             try
             {
-                var userToUpdate = _userServices.GetUserById(id);
+                var userToUpdate = _userServices.GetUserById(id,true,true);
 
                 if (userToUpdate == null)
                     return NotFound("User with Id = " + id.ToString() + " not found");
@@ -107,10 +108,11 @@ namespace EmployeeProject.Controllers
         {
             try
             {
-                var user = _userServices.GetUserById(id);
+                var user = _userServices.GetUserById(id,false,false);
+                if (user.Username == "admin")
+                    return BadRequest("You can't delete this user");
                 if (user == null)
                     return NotFound("User with Id = " + id.ToString() + " not found");
-
                 _userServices.DeleteUser(id);
                 return Ok(user);
             }
@@ -121,125 +123,6 @@ namespace EmployeeProject.Controllers
         }
 
 
-      
-        [HttpGet("GetAllTasks")]
-        public IActionResult GetAllTasks()
-        {
-            try
-            {
-                var tasks = _taskServices.GetAllTasks();
-                return Ok(tasks);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-
-        [HttpGet("GetTask{id:int}")]
-        public IActionResult GetTask(int id)
-        {
-            try
-            {
-                var task = _taskServices.GetTaskById(id);
-                return Ok(task);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        [HttpPost("CreateTask")]
-        public ActionResult CreateTask(ProjectTaskEditViewModel task)
-        {
-            try
-            {
-                if (task == null)
-                    return BadRequest();
-
-                var createdTask = _taskServices.CreateTask(task);
-
-                return CreatedAtAction(nameof(GetTask), new { id = createdTask.Id }, createdTask);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-
-        [HttpPut("UpdateTask{id:int}")]
-        public IActionResult UpdateTask(int id, ProjectTaskEditViewModel task)
-        {
-            try
-            {
-                var taskToUpdate = _taskServices.GetTaskById(id);
-
-                if (taskToUpdate == null)
-                    return NotFound("Task with Id = " + id.ToString() + " not found");
-
-                if (task == null)
-                    return BadRequest();
-
-                return Ok(_taskServices.UpdateTask(task, id));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        [HttpDelete("DeleteTask{id:int}")]
-        public IActionResult DeleteTask(int id)
-        {
-            try
-            {
-                var task = _taskServices.GetTaskById(id);
-                if (task == null)
-                    return NotFound("Task with Id = " + id.ToString() + " not found");
-
-                _taskServices.DeleteTask(id);
-                return Ok(task);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        [HttpPost("AddEmployeeToProject")]
-        public ActionResult AddEmployeeToProject(int EmployeeId, int ProjectId)
-        {
-            return null;
-        }
-
-        [HttpDelete("RemoveEmployeeFromProject")]
-        public ActionResult RemoveEmployeeFromProject(int EmployeeId, int ProjectId)
-        {
-            return null;
-        }
-
-
-        [HttpPut("ChangeTaskStatus{id:int}")]
-        public IActionResult ChangeTaskStatus(int id, TaskStatusEnum status)
-        {
-            try
-            {
-                var taskToUpdate = _taskServices.GetTaskById(id);
-
-                if (taskToUpdate == null)
-                    return NotFound("Task with Id = " + id.ToString() + " not found");
-
-                return Ok(_taskServices.ChangeTaskStatus(id, status));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-        }
 
     }
 }

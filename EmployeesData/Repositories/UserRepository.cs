@@ -35,6 +35,10 @@ namespace EmployeesData.Repositories
                 user.IsActive = true;
                 _applicationDbContext.Users.Add(user);
             }
+            else
+            {
+                user.Password = Encryptor.MD5Hash(user.Password);
+            }
             _applicationDbContext.SaveChanges();
         }
 
@@ -69,7 +73,7 @@ namespace EmployeesData.Repositories
         {
             var query = _applicationDbContext.Users.AsQueryable();
             if (includeProjects)
-                query = query.Include(i => i.Projects);
+                query = query.Include(i => i.Projects).Include(i => i.ProjectTasks);
 
             query = query.Include(i => i.Role).Where(u => u.Id == userId && u.IsActive);
             var user = query.FirstOrDefault();

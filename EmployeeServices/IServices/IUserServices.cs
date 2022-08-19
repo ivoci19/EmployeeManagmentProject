@@ -10,7 +10,7 @@ namespace EmployeeServices.IServices
     public interface IUserServices
     {
         public UserViewModel GetUserByUsernameAndPassword(string username, string password);
-        public UserViewModel GetUserById(int id);
+        public UserViewModel GetUserById(int id, bool includeProjects, bool includeTasks);
         public UserViewModel CreateUser(UserEditViewModel user);
         public UserViewModel UpdateUser(UserEditViewModel user, int id);
         public bool DeleteUser(int id);

@@ -48,6 +48,7 @@ namespace EmployeesData.Repositories
             }
             _applicationDbContext.SaveChanges();
         }
+
         public Project GetProjectById(int id)
         {
             Project project = Projects.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
@@ -60,6 +61,21 @@ namespace EmployeesData.Repositories
                 .Include(i => i.Users)
                 .Where(p => p.Users.Any(proj => proj.Id == employeeId));
             return projects;
+        }
+
+        public Project AddEmployeeToProject(int employeeId, int projectId, User user)
+        {
+            Project project = Projects.Where(i => i.Id == projectId).FirstOrDefault();
+            project.Users.Add(user);
+            SaveProject(project);
+            return project;
+        }
+        public Project RemoveEmployeeFromProject(int employeeId, int projectId, User user)
+        {
+            Project project = Projects.Where(i => i.Id == projectId).FirstOrDefault();
+            project.Users.Remove(user);
+            SaveProject(project);
+            return project;
         }
 
     }

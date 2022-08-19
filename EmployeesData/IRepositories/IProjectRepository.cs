@@ -14,5 +14,7 @@ namespace EmployeesData.IRepositories
         public bool DeleteProject(int id);
         public Project GetProjectById(int id);
         public IEnumerable<Project> GetProjectsByUserId(int employeeId);
+        public Project AddEmployeeToProject(int employeeId, int projectId, User user);
+        public Project RemoveEmployeeFromProject(int employeeId, int projectId, User user);
     }
 }

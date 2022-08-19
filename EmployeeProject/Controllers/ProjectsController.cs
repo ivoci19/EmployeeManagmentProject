@@ -107,5 +107,47 @@ namespace EmployeeProject.Controllers
             }
         }
 
+        [HttpPut("AddEmployeeToProject")]
+        public ActionResult AddEmployeeToProject(int EmployeeId, int ProjectId)
+        {
+            try
+            {
+                var employee = _userServices.GetUserById(EmployeeId, true, true);
+                var project = _projectServices.GetProjectById(ProjectId);
+
+                if (employee == null)
+                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
+                if (project == null)
+                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
+
+                return Ok(_projectServices.AddEmployeeToProject(EmployeeId, ProjectId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpDelete("RemoveEmployeeFromProject")]
+        public ActionResult RemoveEmployeeFromProject(int EmployeeId, int ProjectId)
+        {
+            try
+            {
+                var employee = _userServices.GetUserById(EmployeeId, true, true);
+                var project = _projectServices.GetProjectById(ProjectId);
+
+                if (employee == null)
+                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
+                if (project == null)
+                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
+
+                return Ok(_projectServices.RemoveEmployeeFromProject(EmployeeId,ProjectId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
     }
 }

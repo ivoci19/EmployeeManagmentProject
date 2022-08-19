@@ -15,6 +15,8 @@ namespace EmployeeServices.IServices
         public bool DeleteProject(int id);
         public IEnumerable<ProjectViewModel> GetAllProjects();
         public IEnumerable<ProjectViewModel> GetEmployeeProjects(int employeeId);
+        public bool AddEmployeeToProject(int employeeId, int projectId);
+        public bool RemoveEmployeeFromProject(int employeeId, int projectId);
 
     }
 }

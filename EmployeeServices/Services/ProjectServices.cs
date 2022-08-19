@@ -75,5 +75,26 @@ namespace EmployeeServices.Services
             IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(userId);
             return _mapper.Map<IEnumerable<ProjectViewModel>>(projects);
         }
+        public ProjectViewModel GetEmployeeProject(int userId, int projectId)
+        {
+            IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(userId);
+            Project project = projects.Where(p => p.Id == projectId).FirstOrDefault();
+            return _mapper.Map<ProjectViewModel>(project);
+        }
+
+
+        public bool AddEmployeeToProject( int employeeId, int projectId)
+        {
+                User user = _userRepository.GetUserById(employeeId,true,true);
+                Project project = _projectRepository.AddEmployeeToProject(employeeId, projectId, user);
+                return true;
+        }
+
+        public bool RemoveEmployeeFromProject(int employeeId, int projectId)
+        {
+            User user = _userRepository.GetUserById(employeeId, true, true);
+            Project project = _projectRepository.RemoveEmployeeFromProject(employeeId, projectId, user);
+            return true;
+        }
     }
 }
