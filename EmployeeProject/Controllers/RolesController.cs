@@ -1,13 +1,19 @@
-﻿using EmployeeServices.IServices;
-using Microsoft.AspNetCore.Http;
+﻿using EmployeeProject.Helper;
+using EmployeeServices.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels.Enum;
+using SharedModels.Models;
 using SharedModels.ViewModels;
-using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Net;
 
 namespace EmployeeProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Administrator")]
     public class RolesController : ControllerBase
     {
         private readonly IRoleServices _roleServices;
@@ -17,93 +23,92 @@ namespace EmployeeProject.Controllers
         }
 
         [HttpGet("GetAllRoles")]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "GetAllRoles", Description = "Get all Roles", GroupName = "Roles")]
         public IActionResult GetAllRoles()
         {
-            try
-            {
-                var roles = _roleServices.GetAllRoles();
-                return Ok(roles);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            var roleResponse = _roleServices.GetAllRoles();
+
+            if (roleResponse.Succeeded)
+                return Ok(roleResponse);
+            else
+                return BadRequest(roleResponse);
         }
 
 
         [HttpGet("GetRole{id:int}")]
-        public IActionResult GetRole(int id)
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "GetRoleById", Description = "Get Role by Id", GroupName = "Roles")]
+        public ActionResult GetUserById(int id)
         {
-            try
-            {
-                var role = _roleServices.GetRoleById(id);
-                return Ok(role);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            var roleResponse = _roleServices.GetRoleById(id);
+
+            if (roleResponse.Succeeded)
+                return Ok(roleResponse);
+            else
+                return BadRequest(roleResponse);
         }
 
         [HttpPost("CreateRole")]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "CreateRole", Description = "Create new Role", GroupName = "Roles")]
         public ActionResult CreateRole(RoleEditViewModel role)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (role == null)
-                    return BadRequest();
-
-                var createdRole = _roleServices.CreateRole(role);
-
-                return CreatedAtAction(nameof(GetRole), new { id = createdRole.Id }, createdRole);
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors).ToList();
+                var errors = ModelStateHelper.GetErrors(modelErrors);
+                return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+
+            var roleResponse = _roleServices.CreateRole(role);
+
+            if (roleResponse.Succeeded)
+                return Ok(roleResponse);
+            else
+                return BadRequest(roleResponse);
+
         }
 
-
         [HttpPut("UpdateRole{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "UpdateRole", Description = "Update new Role", GroupName = "Roles")]
         public IActionResult UpdateRole(int id, RoleEditViewModel role)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var roleToUpdate = _roleServices.GetRoleById(id);
-
-                if (roleToUpdate == null)
-                    return NotFound("Role with Id = " + id.ToString() + " not found");
-
-                if (role == null)
-                    return BadRequest();
-
-                return Ok(_roleServices.UpdateRole(role, id));
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors).ToList();
+                var errors = ModelStateHelper.GetErrors(modelErrors);
+                return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+
+            var roleResponse = _roleServices.UpdateRole(role, id);
+
+            if (roleResponse.Succeeded)
+                return Ok(roleResponse);
+            else
+                return BadRequest(roleResponse);
         }
 
         [HttpDelete("DeleteRole{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "DeleteRole", Description = "Delete a Role", GroupName = "Roles")]
         public IActionResult DeleteRole(int id)
         {
-            try
-            {
-                var role = _roleServices.GetRoleById(id);
-                if (role== null)
-                    return NotFound("Role with Id = " + id.ToString() + " not found");
+            var roleResponse = _roleServices.DeleteRole(id);
 
-                _roleServices.DeleteRole(id);
-                return Ok(role);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            if (roleResponse.Succeeded)
+                return Ok(roleResponse);
+            else
+                return BadRequest(roleResponse);
         }
 
-       
+
 
 
     }

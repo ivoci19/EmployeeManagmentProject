@@ -2,11 +2,8 @@
 using EmployeesData.Models;
 using Microsoft.EntityFrameworkCore;
 using SharedModels.ViewModels;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.Repositories
 {
@@ -20,11 +17,14 @@ namespace EmployeesData.Repositories
         }
         public List<User> Users
         {
-            get { return _applicationDbContext.Users
+            get
+            {
+                return _applicationDbContext.Users
                          .Include(i => i.Role)
                          .Include(i => i.Projects)
                          .Include(i => i.ProjectTasks)
-                         .Where(i => i.IsActive).ToList(); }
+                         .Where(i => i.IsActive).ToList();
+            }
         }
 
         public void SaveUser(User user)
@@ -35,17 +35,14 @@ namespace EmployeesData.Repositories
                 user.IsActive = true;
                 _applicationDbContext.Users.Add(user);
             }
-            else
-            {
-                user.Password = Encryptor.MD5Hash(user.Password);
-            }
+            user.Password = Encryptor.MD5Hash(user.Password);
             _applicationDbContext.SaveChanges();
         }
 
         public bool DeleteUser(int id)
         {
             User user = Users.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-            
+
             if (user != null)
             {
                 user.IsActive = false;
@@ -71,12 +68,14 @@ namespace EmployeesData.Repositories
 
         public User GetUserById(int userId, bool includeProjects, bool includeTask)
         {
-            var query = _applicationDbContext.Users.AsQueryable();
+            var userQuery = _applicationDbContext.Users.AsQueryable();
             if (includeProjects)
-                query = query.Include(i => i.Projects).Include(i => i.ProjectTasks);
+                userQuery = userQuery.Include(i => i.Projects);
+            if (includeTask)
+                userQuery = userQuery.Include(i => i.ProjectTasks);
 
-            query = query.Include(i => i.Role).Where(u => u.Id == userId && u.IsActive);
-            var user = query.FirstOrDefault();
+            userQuery = userQuery.Include(i => i.Role).Where(u => u.Id == userId && u.IsActive);
+            var user = userQuery.FirstOrDefault();
             return user;
         }
 

@@ -1,22 +1,19 @@
-﻿using SharedModels.ViewModels;
-using System;
+﻿using SharedModels.Models;
+using SharedModels.ViewModels;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeeServices.IServices
 {
     public interface IUserServices
     {
-        public UserViewModel GetUserByUsernameAndPassword(string username, string password);
-        public UserViewModel GetUserById(int id, bool includeProjects, bool includeTasks);
-        public UserViewModel CreateUser(UserEditViewModel user);
-        public UserViewModel UpdateUser(UserEditViewModel user, int id);
-        public bool DeleteUser(int id);
-        public IEnumerable<UserViewModel> GetAllUsers();
-        public bool GetUserByUsername(string usernamee);
+        public ApiResponse<IEnumerable<UserViewModel>> GetAllUsers();
+        public ApiResponse<UserViewModel> GetUserById(int id, bool includeProjects, bool includeTasks);
+        public ApiResponse<UserViewModel> CreateUser(UserEditViewModel user);
+        public ApiResponse<UserViewModel> UpdateUser(UserEditViewModel user, int id);
+        public ApiResponse<bool> DeleteUser(int id);
+        public UserViewModel GetUserByUsername(string usernamee);
         public UserViewModel GetLoggedInUser(string username);
+        public UserViewModel GetUserByUsernameAndPassword(string username, string password);
 
     }
 }

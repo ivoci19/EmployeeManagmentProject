@@ -1,11 +1,8 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.Repositories
 {
@@ -20,23 +17,22 @@ namespace EmployeesData.Repositories
 
         public List<Project> Projects
         {
-            get { return _applicationDbContext.Projects
-                    .Include(i => i.ProjectTasks)
-                    .Include(i => i.Users)
-                    .Where(i => i.IsActive).ToList(); }
+            get
+            {
+                return _applicationDbContext.Projects
+                    .Include(p => p.ProjectTasks)
+                    .Include(p => p.Users)
+                    .Where(p => p.IsActive).ToList();
+            }
         }
 
         public bool DeleteProject(int id)
         {
-            Project project = Projects.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-            //Nese projekti ka taske te hapura (dmth ne enum pending dhe in progress nuk mund te fshihet)
-            if (project != null)
-            {
-                project.IsActive = false;
-                _applicationDbContext.SaveChanges();
-                return true;
-            }
-            return false;
+            Project project = Projects.Where(p => p.Id == id && p.IsActive).FirstOrDefault();
+            project.IsActive = false;
+            _applicationDbContext.SaveChanges();
+            return true;
+
         }
 
         public void SaveProject(Project project)
@@ -51,10 +47,14 @@ namespace EmployeesData.Repositories
 
         public Project GetProjectById(int id)
         {
-            Project project = Projects.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
+            Project project = Projects.Where(p => p.Id == id && p.IsActive).FirstOrDefault();
             return project;
         }
-
+        /// <summary>
+        /// This method returns all the projects that are assigned to an employee
+        /// </summary>
+        /// <param name="employeeId"></param>
+        /// <returns>IEnumerable<Project></returns>
         public IEnumerable<Project> GetProjectsByUserId(int employeeId)
         {
             IEnumerable<Project> projects = _applicationDbContext.Projects
@@ -63,20 +63,25 @@ namespace EmployeesData.Repositories
             return projects;
         }
 
-        public Project AddEmployeeToProject(int employeeId, int projectId, User user)
+        public Project GetProjectByUserId(int employeeId, int projectId)
         {
-            Project project = Projects.Where(i => i.Id == projectId).FirstOrDefault();
-            project.Users.Add(user);
-            SaveProject(project);
-            return project;
-        }
-        public Project RemoveEmployeeFromProject(int employeeId, int projectId, User user)
-        {
-            Project project = Projects.Where(i => i.Id == projectId).FirstOrDefault();
-            project.Users.Remove(user);
-            SaveProject(project);
+            IEnumerable<Project> projects = GetProjectsByUserId(employeeId);
+            Project project = projects.Where(p => p.Id == projectId).FirstOrDefault();
             return project;
         }
 
+        public Project AddEmployeeToProject(int employeeId, int projectId, User employee, Project project)
+        {
+            project.Users.Add(employee);
+            SaveProject(project);
+            return project;
+        }
+        public Project RemoveEmployeeFromProject(int employeeId, int projectId, User employee)
+        {
+            Project project = Projects.Where(p => p.Id == projectId).FirstOrDefault();
+            project.Users.Remove(employee);
+            SaveProject(project);
+            return project;
+        }
     }
 }

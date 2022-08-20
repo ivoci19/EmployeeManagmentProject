@@ -1,11 +1,8 @@
 ﻿using EmployeesData.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ProjectTask = EmployeesData.Models.ProjectTask;
@@ -20,10 +17,10 @@ namespace EmployeesData
         public DbSet<Role> Roles { get; set; }
         public IHttpContextAccessor _httpAccessor;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option,  IHttpContextAccessor httpAccessor) : base(option)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option, IHttpContextAccessor httpAccessor) : base(option)
         {
             _httpAccessor = httpAccessor;
-        }    
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -59,7 +56,7 @@ namespace EmployeesData
 
         private void UpdateAuditEntities()
         {
-            string userName =  _httpAccessor.HttpContext?.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value?.Trim();
+            string userName = _httpAccessor.HttpContext?.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value?.Trim();
 
             var modifiedEntries = ChangeTracker.Entries()
                 .Where(x => x.Entity is IAudit && (x.State == EntityState.Added || x.State == EntityState.Modified));

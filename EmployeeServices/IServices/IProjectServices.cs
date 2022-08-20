@@ -1,22 +1,20 @@
-﻿using SharedModels.ViewModels;
-using System;
+﻿using SharedModels.Models;
+using SharedModels.ViewModels;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeeServices.IServices
 {
     public interface IProjectServices
     {
-        public ProjectViewModel GetProjectById(int id);
-        public ProjectViewModel CreateProject(ProjectEditViewModel project);
-        public ProjectViewModel UpdateProject(ProjectEditViewModel projectData, int id);
-        public bool DeleteProject(int id);
-        public IEnumerable<ProjectViewModel> GetAllProjects();
-        public IEnumerable<ProjectViewModel> GetEmployeeProjects(int employeeId);
-        public bool AddEmployeeToProject(int employeeId, int projectId);
-        public bool RemoveEmployeeFromProject(int employeeId, int projectId);
+        public ApiResponse<IEnumerable<ProjectViewModel>> GetAllProjects();
+        public ApiResponse<ProjectViewModel> GetProjectById(int id);
+        public ApiResponse<ProjectViewModel> CreateProject(ProjectEditViewModel projectVm);
+        public ApiResponse<ProjectViewModel> UpdateProject(ProjectEditViewModel projectData, int id);
+        public ApiResponse<bool> DeleteProject(int id);
+        public ApiResponse<IEnumerable<ProjectViewModel>> GetEmployeeProjects(int employeeId);
+        public ApiResponse<ProjectViewModel> AddEmployeeToProject(int employeeId, int projectId);
+        public ApiResponse<bool> RemoveEmployeeFromProject(int employeeId, int projectId);
+        public ApiResponse<ProjectViewModel> GetEmployeeProject(int userId, int projectId);
 
     }
 }

@@ -2,12 +2,12 @@
 using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using EmployeeServices.IServices;
+using SharedModels.Enum;
+using SharedModels.Models;
 using SharedModels.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeeServices.Services
 {
@@ -22,52 +22,85 @@ namespace EmployeeServices.Services
             _mapper = mapper;
         }
 
-        public IEnumerable<RoleViewModel> GetAllRoles()
+        public ApiResponse<IEnumerable<RoleViewModel>> GetAllRoles()
         {
-            var role = _roleRepository.Roles;
 
-            return _mapper.Map<IEnumerable<RoleViewModel>>(role); ;
+            var role = _roleRepository.Roles;
+            IEnumerable<RoleViewModel> roleVm = _mapper.Map<IEnumerable<RoleViewModel>>(role);
+            if (role == null)
+            {
+                return ApiResponse<IEnumerable<RoleViewModel>>.ApiFailResponse(ErrorCodes.ROLE_NOT_FOUND, ErrorMessages.ROLE_NOT_FOUND);
+            }
+
+            return ApiResponse<IEnumerable<RoleViewModel>>.ApiOkResponse(roleVm);
         }
 
-
-        public RoleViewModel GetRoleById(int id)
+        public ApiResponse<RoleViewModel> GetRoleById(int id)
         {
             Role role = _roleRepository.GetRoleById(id);
-            return _mapper.Map<RoleViewModel>(role);
 
+            if (role == null)
+                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.ROLE_NOT_FOUND, ErrorMessages.ROLE_NOT_FOUND);
+
+            var roleVm = _mapper.Map<RoleViewModel>(role);
+            var response = ApiResponse<RoleViewModel>.ApiOkResponse(roleVm);
+            return response;
         }
 
-
-        public RoleViewModel CreateRole(RoleEditViewModel roleVm)
+        public ApiResponse<RoleViewModel> CreateRole(RoleEditViewModel roleVm)
         {
-            Role role = _mapper.Map<Role>(roleVm);
-            _roleRepository.SaveRole(role);
-            return _mapper.Map<RoleViewModel>(role);
-        }
-
-        public bool DeleteRole(int id)
-        {
-            Role role = _roleRepository.Roles.FirstOrDefault(u => u.Id == id);
-
-            if (role != null)
+            try
             {
-                return _roleRepository.DeleteRole(id);
+                Role role = _mapper.Map<Role>(roleVm);
+                _roleRepository.SaveRole(role);
+                var roleViewModel = _mapper.Map<RoleViewModel>(role);
+                return ApiResponse<RoleViewModel>.ApiOkResponse(roleViewModel);
             }
-            return false;
+            catch (Exception e)
+            {
+                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+            }
         }
 
-
-        public RoleViewModel UpdateRole(RoleEditViewModel roleData, int id)
+        public ApiResponse<bool> DeleteRole(int id)
         {
-            Role role = _roleRepository.Roles.FirstOrDefault(e => e.Id == id);
-            if (role != null)
+            try
             {
+                Role role = _roleRepository.Roles.FirstOrDefault(i => i.Id == id);
+
+                if (role == null)
+                    return ApiResponse<bool>.ApiFailResponse(ErrorCodes.ROLE_NOT_FOUND, ErrorMessages.ROLE_NOT_FOUND);
+
+                if (role.RoleName == "Administrator")
+                    return ApiResponse<bool>.ApiFailResponse(ErrorCodes.INVALID_REQUEST, ErrorMessages.INVALID_REQUEST);
+
+                _roleRepository.DeleteRole(id);
+                return ApiResponse<bool>.ApiOkResponse(true);
+            }
+            catch (Exception e)
+            {
+                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+            }
+        }
+
+        public ApiResponse<RoleViewModel> UpdateRole(RoleEditViewModel roleData, int id)
+        {
+            try
+            {
+                Role role = _roleRepository.Roles.FirstOrDefault(i => i.Id == id);
+
+                if (role == null)
+                    return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.ROLE_NOT_FOUND, ErrorMessages.ROLE_NOT_FOUND);
+
                 _mapper.Map(roleData, role);
                 _roleRepository.SaveRole(role);
                 var roleVm = _mapper.Map<RoleViewModel>(role);
-                return roleVm;
+                return ApiResponse<RoleViewModel>.ApiOkResponse(roleVm);
             }
-            return null;
+            catch
+            {
+                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+            }
         }
 
     }

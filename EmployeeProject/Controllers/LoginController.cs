@@ -35,8 +35,7 @@ namespace EmployeeProject.Controllers
                 var token = Generate(user);
                 return Ok(token);
             }
-            return NotFound("User not found");
-
+            return NotFound("User not found! Retry again");
         }
 
         private LoginTokens Generate(UserViewModel user)
@@ -60,14 +59,16 @@ namespace EmployeeProject.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            return new LoginTokens { Token = tokenHandler.WriteToken(token),
-                                     ExpirationDate = DateTime.Now.AddMinutes(15) };
+            return new LoginTokens
+            {
+                Token = tokenHandler.WriteToken(token),
+                ExpirationDate = DateTime.Now.AddMinutes(15)
+            };
         }
 
         private UserViewModel Authenticate(UserLogin userLogin)
         {
             var user = _userServices.GetUserByUsernameAndPassword(userLogin.UserName, userLogin.Password);
-
             if (user != null)
             {
                 return user;

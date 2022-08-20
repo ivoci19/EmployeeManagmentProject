@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.Models
 {
@@ -14,8 +10,9 @@ namespace EmployeesData.Models
         [Required]
         public string Name { get; set; }
         [Required]
+        [StringLength(1000)]
         public string Description { get; set; }
-        [Required] 
+        [Required]
         public string Code { get; set; }
         public ICollection<ProjectTask> ProjectTasks { get; set; }
         public ICollection<User> Users { get; set; }

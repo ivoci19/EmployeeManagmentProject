@@ -1,11 +1,13 @@
-﻿using EmployeesData.IRepositories;
+﻿using EmployeeProject.Helpers;
 using EmployeeServices.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels.Enum;
+using SharedModels.Models;
 using SharedModels.ViewModels;
-using System;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Security.Claims;
 
 namespace EmployeeProject.Controllers
@@ -18,128 +20,57 @@ namespace EmployeeProject.Controllers
         private readonly IUserServices _userServices;
         private readonly IProjectServices _projectServices;
         private readonly ITaskServices _taskServices;
-        public EmployeeController(IUserServices userServices, IProjectServices projectServices, ITaskServices taskServices)
+        private readonly IIdentityHelper _identityHelper;
+        public EmployeeController(IUserServices userServices, IProjectServices projectServices, ITaskServices taskServices, IIdentityHelper identityHelper)
         {
             _userServices = userServices;
             _projectServices = projectServices;
             _taskServices = taskServices;
+            _identityHelper = identityHelper;
         }
 
         [HttpGet("GetProfileData")]
+        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "GetProfileData", Description = "Get logged in employee data", GroupName = "Employee")]
         public IActionResult GetProfileData()
         {
-            try
-            {
-                var user = GetCurrentUser();
-                return Ok(user);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            var user = GetCurrentUser();
+            if (user != null)
+                return Ok(ApiResponse<UserViewModel>.ApiOkResponse(user));
+            else
+                return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.USER_NOT_FOUND));
         }
 
         [HttpPut("UpdateProfileData")]
+        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "UpdateProfileData", Description = "Update profile data", GroupName = "Employee")]
         public IActionResult UpdateProfileData(UserEditViewModel user)
         {
-            try
-            {
-                int id = GetCurrentUser().Id;
-                var userToUpdate = _userServices.GetUserById(id,false,false);
+            if (user == null)
+                return BadRequest();
 
-                if (userToUpdate == null)
-                    return NotFound("User with Id = " + id.ToString() + " not found");
+            var employee = GetCurrentUser();
 
-                if (user == null)
-                    return BadRequest();
+            if (employee == null)
+                return BadRequest();
 
-                return Ok(_userServices.UpdateUser(user, id));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
+            var id = employee.Id;
+            var userResponse = _userServices.UpdateUser(user, id);
 
-        [HttpGet("ViewProjects")]
-        public IActionResult GetEmployeeProjects()
-        {
-            try
-            {
-                int userId = GetCurrentUser().Id;
-                var projects = _projectServices.GetEmployeeProjects(userId);
-                return Ok(projects);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        
-        [HttpPost("CreateTask")]
-        public ActionResult CreateTask(ProjectTaskEditViewModel task)
-        {
-            return null;
-        }
-
-        [HttpPut("ChangeTaskStatusToCompleted")]
-        public IActionResult ChangeTaskStatusToCompleted(int TaskId)
-        {
-            try
-            {
-                int UserId = GetCurrentUser().Id;
-                var taskToUpdate = _taskServices.GetTaskByIdAndUserId(TaskId, UserId);
-
-                if (taskToUpdate == null)
-                    return NotFound("Task with Id = " + TaskId.ToString() + " not found");
-
-                return Ok(_taskServices.ChangeTaskStatus(taskToUpdate,TaskId));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-        }
-
-        [HttpGet("GetTasks")]
-        public IActionResult GetTasks()
-        {
-            try
-            {
-                int UserId = GetCurrentUser().Id;
-                var tasks = _taskServices.GetTasks(UserId);
-                return Ok(tasks);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            if (userResponse.Succeeded)
+                return Ok(userResponse);
+            else
+                return BadRequest(userResponse);
         }
 
         private UserViewModel GetCurrentUser()
         {
-            var loggedInUser = _userServices.GetLoggedInUser(GetUserUsername().Username);
-            return loggedInUser;
-        }
-
-        private UserViewModel GetUserUsername()
-        {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
-
-            if (identity != null)
-            {
-                var userClaims = identity.Claims;
-
-                return new UserViewModel
-                {
-                    Username = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value
-                };
-            }
-            return null;
+            var user = _identityHelper.GetCurrentUser(identity);
+            return user;
         }
-
 
     }
 }

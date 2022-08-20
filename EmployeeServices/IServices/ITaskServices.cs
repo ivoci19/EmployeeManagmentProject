@@ -1,23 +1,22 @@
 ﻿using SharedModels.Enum;
+using SharedModels.Models;
 using SharedModels.ViewModels;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeeServices.IServices
 {
     public interface ITaskServices
     {
-        public ProjectTaskViewModel GetTaskById(int id);
-        public ProjectTaskViewModel CreateTask(ProjectTaskEditViewModel task);
-        public ProjectTaskViewModel UpdateTask(ProjectTaskEditViewModel taskData, int id);
-        public bool DeleteTask(int id);
-        public IEnumerable<ProjectTaskViewModel> GetAllTasks();
-        public ProjectTaskViewModel ChangeTaskStatus(int id, TaskStatusEnum status);
-        public ProjectTaskViewModel ChangeTaskStatus(ProjectTaskViewModel taskVm, int TaskId);
-        public ProjectTaskViewModel GetTaskByIdAndUserId(int TaskId, int UserId);
-        public IEnumerable<ProjectTaskViewModel> GetTasks(int UserId);
+        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllTasks();
+        public ApiResponse<ProjectTaskViewModel> GetTaskById(int id);
+        public ApiResponse<ProjectTaskViewModel> CreateTask(ProjectTaskEditViewModel task);
+        public ApiResponse<ProjectTaskViewModel> UpdateTask(ProjectTaskEditViewModel taskData, int id);
+        public ApiResponse<bool> DeleteTask(int id);
+        public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int id, TaskStatusEnum status);
+        public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int taskId, int userId, TaskStatusEnum status);
+        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetTasksByUserId(int userId);
+        public ApiResponse<ProjectTaskViewModel> GetTaskByIdAndUserId(int taskId, int userId);
+        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllProjectTasksByUserId(int userId);
+        public ApiResponse<ProjectTaskViewModel> CreateTask(int projectId, int employeeId, ProjectTaskEditViewModel taskVm);
     }
 }

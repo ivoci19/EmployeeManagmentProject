@@ -1,152 +1,182 @@
-﻿using EmployeeServices.IServices;
-using Microsoft.AspNetCore.Http;
+﻿using EmployeeProject.Helper;
+using EmployeeProject.Helpers;
+using EmployeeServices.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels.Enum;
+using SharedModels.Models;
 using SharedModels.ViewModels;
-using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Net;
+using System.Security.Claims;
 
 namespace EmployeeProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
-        private readonly IUserServices _userServices;
         private readonly IProjectServices _projectServices;
-        private readonly ITaskServices _taskServices;
-        public ProjectsController(IUserServices userServices, IProjectServices projectServices, ITaskServices taskServices)
+        private readonly IIdentityHelper _identityHelper;
+        public ProjectsController(IProjectServices projectServices, IIdentityHelper identityHelper)
         {
-            _userServices = userServices;
             _projectServices = projectServices;
-            _taskServices = taskServices;
+            _identityHelper = identityHelper;
         }
 
         [HttpGet("GetAllProjects")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "GetAllProjects", Description = "Get all projects", GroupName = "Projects")]
         public IActionResult GetAllProjects()
         {
-            try
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var loggedInUser = _identityHelper.GetCurrentUser(identity);
+
+            if (loggedInUser.RoleName.ToLower() == "administrator")
             {
-                var projects = _projectServices.GetAllProjects();
-                return Ok(projects);
+                var projectResponse = _projectServices.GetAllProjects();
+                if (projectResponse.Succeeded)
+                    return Ok(projectResponse);
+                else
+                    return BadRequest(projectResponse);
             }
-            catch (Exception e)
+            else if (loggedInUser.RoleName.ToLower() == "employee")
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                var projectResponse = _projectServices.GetEmployeeProjects(loggedInUser.Id);
+                if (projectResponse.Succeeded)
+                    return Ok(projectResponse);
+                else
+                    return BadRequest(projectResponse);
+            }
+            else
+            {
+                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
             }
         }
 
 
-        [HttpGet("GetProject{id:int}")]
-        public IActionResult GetProject(int id)
+        [HttpGet("GetProjectById{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "GetProjectById", Description = "Get project by id", GroupName = "Projects")]
+        public IActionResult GetProjectById(int id)
         {
-            try
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var loggedInUser = _identityHelper.GetCurrentUser(identity);
+
+            if (loggedInUser.RoleName.ToLower() == "administrator")
             {
-                var project = _projectServices.GetProjectById(id);
-                return Ok(project);
+                var projectResponse = _projectServices.GetProjectById(id);
+                if (projectResponse.Succeeded)
+                    return Ok(projectResponse);
+                else
+                    return BadRequest(projectResponse);
             }
-            catch (Exception e)
+            else if (loggedInUser.RoleName.ToLower() == "employee")
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                var projectResponse = _projectServices.GetEmployeeProject(loggedInUser.Id, id);
+                if (projectResponse.Succeeded)
+                    return Ok(projectResponse);
+                else
+                    return BadRequest(projectResponse);
             }
+            else
+            {
+                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
+            }
+
         }
 
         [HttpPost("CreateProject")]
+        [Authorize(Roles = "Administrator")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "CreateProject", Description = "Create new Project", GroupName = "Projects")]
         public ActionResult CreateProject(ProjectEditViewModel project)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (project == null)
-                    return BadRequest();
-
-                var createdProject = _projectServices.CreateProject(project);
-
-                return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, createdProject);
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors).ToList();
+                var errors = ModelStateHelper.GetErrors(modelErrors);
+                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+
+            var projectResponse = _projectServices.CreateProject(project);
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            else
+                return BadRequest(projectResponse);
+
         }
 
 
         [HttpPut("UpdateProject{id:int}")]
+        [Authorize(Roles = "Administrator")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "UpdateProject", Description = "Update new Project", GroupName = "Projects")]
         public IActionResult UpdateProject(int id, ProjectEditViewModel project)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var projectToUpdate = _projectServices.GetProjectById(id);
-
-                if (projectToUpdate == null)
-                    return NotFound("Project with Id = " + id.ToString() + " not found");
-
-                if (project == null)
-                    return BadRequest();
-
-                return Ok(_projectServices.UpdateProject(project, id));
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors).ToList();
+                var errors = ModelStateHelper.GetErrors(modelErrors);
+                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            var projectResponse = _projectServices.UpdateProject(project, id);
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            else
+                return BadRequest(projectResponse);
+
         }
 
         [HttpDelete("DeleteProject{id:int}")]
+        [Authorize(Roles = "Administrator")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "DeleteProject", Description = "Delete a Project", GroupName = "Projects")]
         public IActionResult DeleteProject(int id)
         {
-            try
-            {
-                var project = _projectServices.GetProjectById(id);
-                if (project == null)
-                    return NotFound("Project with Id = " + id.ToString() + " not found");
+            var projectResponse = _projectServices.DeleteProject(id);
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            else
+                return BadRequest(projectResponse);
 
-                _projectServices.DeleteProject(id);
-                return Ok(project);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
         }
 
+
         [HttpPut("AddEmployeeToProject")]
-        public ActionResult AddEmployeeToProject(int EmployeeId, int ProjectId)
+        [Authorize(Roles = "Administrator")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "AddEmployeeToProject", Description = "Add Employee to Project", GroupName = "Projects")]
+        public ActionResult AddEmployeeToProject(int employeeId, int projectId)
         {
-            try
-            {
-                var employee = _userServices.GetUserById(EmployeeId, true, true);
-                var project = _projectServices.GetProjectById(ProjectId);
+            var projectResponse = _projectServices.AddEmployeeToProject(employeeId, projectId);
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            else
+                return BadRequest(projectResponse);
 
-                if (employee == null)
-                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
-                if (project == null)
-                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
-
-                return Ok(_projectServices.AddEmployeeToProject(EmployeeId, ProjectId));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
         }
 
         [HttpDelete("RemoveEmployeeFromProject")]
-        public ActionResult RemoveEmployeeFromProject(int EmployeeId, int ProjectId)
+        [Authorize(Roles = "Administrator")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "RemoveEmployeeFromProject", Description = "Remove Employee from Project", GroupName = "Projects")]
+        public ActionResult RemoveEmployeeFromProject(int employeeId, int projectId)
         {
-            try
-            {
-                var employee = _userServices.GetUserById(EmployeeId, true, true);
-                var project = _projectServices.GetProjectById(ProjectId);
-
-                if (employee == null)
-                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
-                if (project == null)
-                    return NotFound("Employee with Id = " + EmployeeId.ToString() + " not found");
-
-                return Ok(_projectServices.RemoveEmployeeFromProject(EmployeeId,ProjectId));
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            var projectResponse = _projectServices.RemoveEmployeeFromProject(employeeId, projectId);
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            else
+                return BadRequest(projectResponse);
         }
 
     }

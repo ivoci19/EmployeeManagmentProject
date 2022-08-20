@@ -1,11 +1,9 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
+using SharedModels.Enum;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.Repositories
 {
@@ -19,20 +17,20 @@ namespace EmployeesData.Repositories
         }
         public List<ProjectTask> ProjectTasks
         {
-            get { return _applicationDbContext.ProjectTasks.Include(i => i.Project).Include(i => i.User).Where(i => i.IsActive).ToList(); }
+            get
+            {
+                return _applicationDbContext.ProjectTasks
+                                              .Include(i => i.Project)
+                                              .Include(i => i.User)
+                                              .Where(i => i.IsActive)
+                                              .ToList();
+            }
         }
 
-        public bool DeleteTask(int id)
+        public ProjectTask GetTaskById(int id)
         {
             ProjectTask projectTask = ProjectTasks.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-
-            if (projectTask != null)
-            {
-                projectTask.IsActive = false;
-                _applicationDbContext.SaveChanges();
-                return true;
-            }
-            return false;
+            return projectTask;
         }
 
         public void SaveTask(ProjectTask projectTask)
@@ -44,11 +42,15 @@ namespace EmployeesData.Repositories
             }
             _applicationDbContext.SaveChanges();
         }
-        public ProjectTask GetTaskById(int id)
+
+        public bool DeleteTask(int id)
         {
             ProjectTask projectTask = ProjectTasks.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-            return projectTask;
+            projectTask.IsActive = false;
+            _applicationDbContext.SaveChanges();
+            return true;
         }
+
         public ProjectTask GetTaskByIdAndUserId(int id, int UserId)
         {
             ProjectTask projectTask = ProjectTasks.Where(i => i.Id == id && i.IsActive && i.AssignedTo == UserId).FirstOrDefault();
@@ -58,6 +60,30 @@ namespace EmployeesData.Repositories
         {
             IEnumerable<ProjectTask> projectTask = ProjectTasks.Where(i => i.IsActive && i.AssignedTo == UserId);
             return projectTask;
+        }
+
+        public IEnumerable<ProjectTask> GetTasksByProjectId(int projectId)
+        {
+            IEnumerable<ProjectTask> tasks = ProjectTasks.Where(i => i.Project.Id == projectId);
+            return tasks;
+        }
+
+        public IEnumerable<ProjectTask> GetTasksOfUserProjects(IEnumerable<Project> projects)
+        {
+            IEnumerable<ProjectTask> projectTask = null;
+            foreach (Project project in projects)
+            {
+                projectTask = project.ProjectTasks;
+            }
+            return projectTask;
+        }
+        public bool IsTaskStatusDone(int taskId)
+        {
+            ProjectTask task = ProjectTasks.Where(i => i.Id == taskId).FirstOrDefault();
+            if (task.TaskStatus == TaskStatusEnum.DONE)
+                return false;
+            else
+                return true;
         }
     }
 }

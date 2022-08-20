@@ -1,9 +1,5 @@
 ﻿using EmployeesData.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.IRepositories
 {
@@ -15,7 +11,7 @@ namespace EmployeesData.IRepositories
         public User GetUserByUsername(string username);
         public User GetUserById(int id, bool includeProject, bool includeTask);
         public bool DeleteUser(int UserId);
-   
+
 
     }
 }

@@ -1,9 +1,5 @@
 ﻿using EmployeesData.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.IRepositories
 {
@@ -15,5 +11,8 @@ namespace EmployeesData.IRepositories
         public ProjectTask GetTaskById(int id);
         public ProjectTask GetTaskByIdAndUserId(int id, int UserId);
         public IEnumerable<ProjectTask> GetTasksByUserId(int UserId);
+        public IEnumerable<ProjectTask> GetTasksByProjectId(int projectId);
+        public IEnumerable<ProjectTask> GetTasksOfUserProjects(IEnumerable<Project> projects);
+        public bool IsTaskStatusDone(int taskId);
     }
 }

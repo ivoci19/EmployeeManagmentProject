@@ -3,11 +3,6 @@ using EmployeesData.Repositories;
 using EmployeeServices.IServices;
 using EmployeeServices.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeeServices
 {
@@ -23,6 +18,10 @@ namespace EmployeeServices
 
             services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
             services.AddScoped<ITaskServices, TaskServices>();
+
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IRoleServices, RoleServices>();
         }
+
     }
 }

@@ -1,9 +1,5 @@
 ﻿using EmployeesData.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmployeesData.IRepositories
 {
@@ -14,7 +10,8 @@ namespace EmployeesData.IRepositories
         public bool DeleteProject(int id);
         public Project GetProjectById(int id);
         public IEnumerable<Project> GetProjectsByUserId(int employeeId);
-        public Project AddEmployeeToProject(int employeeId, int projectId, User user);
+        public Project GetProjectByUserId(int employeeId, int projectId);
+        public Project AddEmployeeToProject(int employeeId, int projectId, User employee, Project project);
         public Project RemoveEmployeeFromProject(int employeeId, int projectId, User user);
     }
 }
