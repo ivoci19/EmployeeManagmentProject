@@ -87,6 +87,7 @@ namespace EmployeesData.Repositories
             SaveProject(project);
             return project;
         }
+
         //It returns true if the project has open tasks and it returns false otherwise
         public bool HasOpenProjectTasks(int projectId)
         {

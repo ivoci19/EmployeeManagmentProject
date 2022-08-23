@@ -34,15 +34,15 @@ namespace EmployeeServices.Services
             return ApiResponse<IEnumerable<UserViewModel>>.ApiOkResponse(userVm);
         }
 
-        public ApiResponse<UserViewModel> GetUserById(int id)
+        public ApiResponse<AllDataUserViewModel> GetUserById(int id)
         {
             User user = _userRepository.GetUserById(id);
 
             if (user == null)
-                return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.USER_NOT_FOUND, ErrorMessages.USER_NOT_FOUND);
+                return ApiResponse<AllDataUserViewModel>.ApiFailResponse(ErrorCodes.USER_NOT_FOUND, ErrorMessages.USER_NOT_FOUND);
 
-            var userVm = _mapper.Map<UserViewModel>(user);
-            var response = ApiResponse<UserViewModel>.ApiOkResponse(userVm);
+            var userVm = _mapper.Map<AllDataUserViewModel>(user);
+            var response = ApiResponse<AllDataUserViewModel>.ApiOkResponse(userVm);
             return response;
         }
 

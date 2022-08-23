@@ -10,7 +10,7 @@ namespace EmployeeServices.IServices
         public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllTasks(UserViewModel user);
         public ApiResponse<ProjectTaskViewModel> GetTaskById(int id, UserViewModel user);
         public ApiResponse<ProjectTaskViewModel> CreateTask(ProjectTaskEditViewModel task, UserViewModel user);
-        public ApiResponse<ProjectTaskViewModel> UpdateTask(ProjectTaskEditViewModel taskData, int id);
+        public ApiResponse<ProjectTaskViewModel> UpdateTask(ProjectTaskEditViewModel taskData, int id, UserViewModel user);
         public ApiResponse<bool> DeleteTask(int id);
         public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int taskId, TaskStatusEnum status, UserViewModel user);
         public ApiResponse<ProjectTaskViewModel> AssignTaskToEmployee(int taskId, int employeeId, UserViewModel userVm);

@@ -21,7 +21,7 @@ namespace EmployeeServices.Services
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public TaskServices(IProjectTaskRepository taskRepository, IMapper mapper, IProjectRepository projectRepository,IUserRepository userRepository, ILogger<TaskServices> logger)
+        public TaskServices(IProjectTaskRepository taskRepository, IMapper mapper, IProjectRepository projectRepository, IUserRepository userRepository, ILogger<TaskServices> logger)
         {
             _mapper = mapper;
             _taskRepository = taskRepository;
@@ -78,10 +78,15 @@ namespace EmployeeServices.Services
             }
             else if (user.RoleName.ToLower() == "employee")
             {
-                var task = _taskRepository.GetTaskByIdAndUserId(taskId, user.Id);
+                var task = _taskRepository.GetTaskById(taskId);
 
                 if (task == null)
                     return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+
+                //Check if the logged in user is part of the project 
+                var project = _projectRepository.GetProjectByUserId(user.Id, task.ProjectId);
+                if (project == null)
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
 
                 var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
                 return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
@@ -98,13 +103,13 @@ namespace EmployeeServices.Services
             {
                 if (user.RoleName.ToLower() == "administrator")
                 {
-                    if(taskVm.AssignedTo != null)
+                    if (taskVm.AssignedTo != null)
                     {
                         var id = taskVm.AssignedTo ?? default(int);
-                        if (_userRepository.GetUserById(id)==null)
+                        if (_userRepository.GetUserById(id) == null)
                             return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
                     }
-                    if(_projectRepository.GetProjectById(taskVm.ProjectId) == null)
+                    if (_projectRepository.GetProjectById(taskVm.ProjectId) == null)
                     {
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
                     }
@@ -113,11 +118,30 @@ namespace EmployeeServices.Services
                     var taskViewModel = _mapper.Map<ProjectTaskViewModel>(task);
                     return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskViewModel);
                 }
-                if (user.RoleName.ToLower() == "employee")
+                else if (user.RoleName.ToLower() == "employee")
                 {
+                    //Checking the project exist in the database
+                    if (_projectRepository.GetProjectById(taskVm.ProjectId) == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+
+                    //Check if employee is part of the project that he is creating the task
                     Project project = _projectRepository.GetProjectByUserId(user.Id, taskVm.ProjectId);
                     if (project == null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
+
+                    //Check if the employee that you are assiging the task is part of the project
+                    if (taskVm.AssignedTo != null)
+                    {
+                        //Formatting from a nullable variable to an int variable
+                        var id = taskVm.AssignedTo ?? default(int);
+                        //If employee doesn't exist
+                        if (_userRepository.GetUserById(id) == null)
+                            return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
+                        //Check if the employee you are assigning the task is part of the project
+                        Project projectUser = _projectRepository.GetProjectByUserId(id, taskVm.ProjectId);
+                        if (projectUser == null)
+                            return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_PART_OF_PROJECT, ErrorMessages.EMPLOYEE_NOT_PART_OF_PROJECT);
+                    }
 
                     ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
                     _taskRepository.SaveTask(task);
@@ -143,8 +167,11 @@ namespace EmployeeServices.Services
             {
                 ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(u => u.Id == id);
 
+                //Checking task in database if it exists or not
                 if (task == null)
                     return ApiResponse<bool>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+
+                //Checking if the task status is Done or not
                 if (task.TaskStatus == TaskStatusEnum.PENDING || task.TaskStatus == TaskStatusEnum.IN_PROGRESS)
                     return ApiResponse<bool>.ApiFailResponse(ErrorCodes.TASK_IS_OPEN, ErrorMessages.TASK_IS_OPEN);
 
@@ -158,19 +185,53 @@ namespace EmployeeServices.Services
             }
         }
 
-        public ApiResponse<ProjectTaskViewModel> UpdateTask(ProjectTaskEditViewModel taskData, int id)
+        public ApiResponse<ProjectTaskViewModel> UpdateTask(ProjectTaskEditViewModel taskData, int id, UserViewModel user)
         {
             try
             {
-                ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(i => i.Id == id);
+                if (user.RoleName.ToLower() == "administrator")
+                {
+                    ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(i => i.Id == id);
 
-                if (task == null)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-                _mapper.Map(taskData, task);
-                _taskRepository.SaveTask(task);
-                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
-                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                    _mapper.Map(taskData, task);
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                }
+                else if (user.RoleName.ToLower() == "employee")
+                {
+                    ProjectTask task = _taskRepository.GetTaskByIdAndUserId(id, user.Id);
+
+                    //Check if the employee is part of the task
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.USER_RESTRICTED, ErrorMessages.USER_RESTRICTED);
+
+                    //Checking the project exist in the database
+                    if (_projectRepository.GetProjectById(taskData.ProjectId) == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+
+                    //Check if employee is part of the project that he is modifying the task
+                    Project project = _projectRepository.GetProjectByUserId(user.Id, taskData.ProjectId);
+                    if (project == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
+
+                    //Employee cannot assign this task to another person 
+                    if (taskData.AssignedTo != null)
+                    {
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.ASSIGNING_NOT_POSSIBLE, ErrorMessages.ASSIGNING_NOT_POSSIBLE);
+                    }
+                    _mapper.Map(taskData, task);
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                }
+                else
+                {
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+                }
             }
             catch
             {
@@ -240,9 +301,6 @@ namespace EmployeeServices.Services
                     if (task.AssignedTo != null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
 
-                    if (task.AssignedTo == employeeId)
-                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ALREADY_ASSIGNED, ErrorMessages.TASK_IS_ALREADY_ASSIGNED);
-
                     Project project = _projectRepository.GetProjectByUserId(employeeId, task.ProjectId);
                     if (project == null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_PART_OF_PROJECT, ErrorMessages.EMPLOYEE_NOT_PART_OF_PROJECT);
@@ -264,11 +322,11 @@ namespace EmployeeServices.Services
                     if (task.CreatedBy != userVm.Username)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_CREATED_BY_ANOTHER_USER, ErrorMessages.TASK_CREATED_BY_ANOTHER_USER);
 
-                    if (task.AssignedTo != null)
-                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
-
                     if (task.AssignedTo == employeeId)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ALREADY_ASSIGNED, ErrorMessages.TASK_IS_ALREADY_ASSIGNED);
+                   
+                    if (task.AssignedTo != null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
 
                     Project projectEmployee = _projectRepository.GetProjectByUserId(userVm.Id, task.ProjectId);
                     if (projectEmployee == null)
@@ -292,7 +350,6 @@ namespace EmployeeServices.Services
             {
                 _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
                 return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
-
             }
         }
     }

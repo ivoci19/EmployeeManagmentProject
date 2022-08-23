@@ -69,11 +69,7 @@ namespace EmployeeProject.Controllers
         private UserViewModel Authenticate(UserLogin userLogin)
         {
             var user = _userServices.GetUserByUsernameAndPassword(userLogin.UserName, userLogin.Password);
-            if (user != null)
-            {
-                return user;
-            }
-            return null;
+            return user;
         }
 
 

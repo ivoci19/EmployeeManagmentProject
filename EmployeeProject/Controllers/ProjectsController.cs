@@ -45,8 +45,8 @@ namespace EmployeeProject.Controllers
 
 
         [HttpGet("GetProjectById")]
-        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataProjectViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "GetProjectById", Description = "Get project by id", GroupName = "Projects")]
         public IActionResult GetProjectById(int id)
         {

@@ -22,8 +22,8 @@ namespace EmployeesData.Repositories
             {
                 return _applicationDbContext.Users
                          .Include(i => i.Role)
-                         .Include(i => i.Projects)
-                         .Include(i => i.ProjectTasks)
+                         .Include(i => i.Projects.Where(i => i.IsActive))
+                         .Include(i => i.ProjectTasks.Where(i => i.IsActive))
                          .Where(i => i.IsActive);
             }
         }

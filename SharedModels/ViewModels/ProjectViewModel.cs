@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace SharedModels.ViewModels
 {
@@ -19,5 +20,11 @@ namespace SharedModels.ViewModels
     }
     public class ProjectEditViewModel : ProjectBaseViewModel
     {
+    }
+
+    public class AllDataProjectViewModel : ProjectViewModel
+    {
+        public ICollection<ProjectTaskViewModel> ProjectTasks { get; set; }
+        public ICollection<UserViewModel> Users { get; set; }
     }
 }

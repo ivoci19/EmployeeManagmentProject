@@ -7,7 +7,7 @@ namespace EmployeeServices.IServices
     public interface IUserServices
     {
         public ApiResponse<IEnumerable<UserViewModel>> GetAllUsers();
-        public ApiResponse<UserViewModel> GetUserById(int id);
+        public ApiResponse<AllDataUserViewModel> GetUserById(int id);
         public ApiResponse<UserViewModel> CreateUser(UserEditViewModel user);
         public ApiResponse<UserViewModel> UpdateUser(UserEditViewModel userData, int id);
         public ApiResponse<bool> DeleteUser(int id);

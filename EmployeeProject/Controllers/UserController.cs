@@ -40,8 +40,8 @@ namespace EmployeeProject.Controllers
 
 
         [HttpGet("GetUser")]
-        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataUserViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataUserViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "GetUserById", Description = "Get User by Id", GroupName = "Users")]
         public ActionResult<User> GetUser(int userId)
         {
@@ -70,7 +70,6 @@ namespace EmployeeProject.Controllers
             if (userResponse.Succeeded)
                 return Ok(userResponse);
             return BadRequest(userResponse);
-
         }
 
         [HttpPut("UpdateUser")]

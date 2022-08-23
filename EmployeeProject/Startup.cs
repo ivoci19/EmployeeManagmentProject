@@ -27,8 +27,10 @@ namespace EmployeeProject
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
+            //Connection with Sql server
             services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration["ConnectionStrings:MainConnection"], b => b.MigrationsAssembly("EmployeesData")));
 
+            //Authentication using JWT
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {

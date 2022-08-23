@@ -105,7 +105,11 @@ namespace EmployeeProject.Controllers
                 return BadRequest(ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
 
-            var taskResponse = _taskServices.UpdateTask(task, id);
+
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var loggedInUser = _identityHelper.GetCurrentUser(identity);
+
+            var taskResponse = _taskServices.UpdateTask(task, id, loggedInUser);
 
             if (taskResponse.Succeeded)
                 return Ok(taskResponse);

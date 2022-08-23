@@ -15,16 +15,14 @@ namespace EmployeeServices.Services
     public class ProjectServices : IProjectServices
     {
         private readonly IProjectRepository _projectRepository;
-        private readonly IProjectTaskRepository _projectTaskRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public ProjectServices(IProjectRepository projectRepository, IUserRepository userRepository, IMapper mapper, IProjectTaskRepository projectTaskRepository, ILogger<ProjectServices> logger)
+        public ProjectServices(IProjectRepository projectRepository, IUserRepository userRepository, IMapper mapper, ILogger<ProjectServices> logger)
         {
             _projectRepository = projectRepository;
             _userRepository = userRepository;
-            _projectTaskRepository = projectTaskRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -36,11 +34,6 @@ namespace EmployeeServices.Services
 
                 var project = _projectRepository.Projects;
                 IEnumerable<ProjectViewModel> projectVm = _mapper.Map<IEnumerable<ProjectViewModel>>(project);
-
-                if (project == null)
-                {
-                    return ApiResponse<IEnumerable<ProjectViewModel>>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
-                }
 
                 return ApiResponse<IEnumerable<ProjectViewModel>>.ApiOkResponse(projectVm);
             }
@@ -62,17 +55,17 @@ namespace EmployeeServices.Services
 
         }
 
-        public ApiResponse<ProjectViewModel> GetProjectById(int projectId, UserViewModel user)
+        public ApiResponse<AllDataProjectViewModel> GetProjectById(int projectId, UserViewModel user)
         {
             if (user.RoleName.ToLower() == "administrator")
             {
                 Project project = _projectRepository.GetProjectById(projectId);
 
                 if (project == null)
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+                    return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
 
-                var projectVm = _mapper.Map<ProjectViewModel>(project);
-                var response = ApiResponse<ProjectViewModel>.ApiOkResponse(projectVm);
+                var projectVm = _mapper.Map<AllDataProjectViewModel>(project);
+                var response = ApiResponse<AllDataProjectViewModel>.ApiOkResponse(projectVm);
                 return response;
             }
             else if (user.RoleName.ToLower() == "employee")
@@ -82,15 +75,15 @@ namespace EmployeeServices.Services
                 Project project = projects.Where(p => p.Id == projectId).FirstOrDefault();
 
                 if (project == null)
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
+                    return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
 
-                var projectVm = _mapper.Map<ProjectViewModel>(project);
+                var projectVm = _mapper.Map<AllDataProjectViewModel>(project);
 
-                return ApiResponse<ProjectViewModel>.ApiOkResponse(projectVm);
+                return ApiResponse<AllDataProjectViewModel>.ApiOkResponse(projectVm);
             }
             else
             {
-                return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+                return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
             }
         }
 
@@ -118,13 +111,13 @@ namespace EmployeeServices.Services
         {
             try
             {
-                if (_projectRepository.IsCodeUsed(projectData.Code, id, true))
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.CODE_ALREADY_USED, ErrorMessages.CODE_ALREADY_USED);
-
                 Project project = _projectRepository.Projects.FirstOrDefault(p => p.Id == id);
 
                 if (project == null)
                     return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+
+                if (_projectRepository.IsCodeUsed(projectData.Code, id, true))
+                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.CODE_ALREADY_USED, ErrorMessages.CODE_ALREADY_USED);
 
                 _mapper.Map(projectData, project);
                 _projectRepository.SaveProject(project);

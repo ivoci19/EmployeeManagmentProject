@@ -29,5 +29,6 @@
         public static string EMPLOYEE_NOT_FOUND = "Employee not found!";
         public static string EMPLOYEE_HAS_OPENED_TASKS = "This employee cannot be deleted from project because he has opened tasks!";
         public static string SERVER_ERROR = "Server error!";
+        public static string ASSIGNING_NOT_POSSIBLE = "You can't assign this task to another employee!";
     }
 }
