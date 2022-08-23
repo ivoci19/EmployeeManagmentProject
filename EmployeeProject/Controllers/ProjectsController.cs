@@ -35,30 +35,16 @@ namespace EmployeeProject.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var projectResponse = _projectServices.GetAllProjects();
-                if (projectResponse.Succeeded)
-                    return Ok(projectResponse);
-                else
-                    return BadRequest(projectResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var projectResponse = _projectServices.GetEmployeeProjects(loggedInUser.Id);
-                if (projectResponse.Succeeded)
-                    return Ok(projectResponse);
-                else
-                    return BadRequest(projectResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
-            }
+            var projectResponse = _projectServices.GetAllProjects(loggedInUser);
+
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            return BadRequest(projectResponse);
+
         }
 
 
-        [HttpGet("GetProjectById{id:int}")]
+        [HttpGet("GetProjectById")]
         [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "GetProjectById", Description = "Get project by id", GroupName = "Projects")]
@@ -67,27 +53,11 @@ namespace EmployeeProject.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var projectResponse = _projectServices.GetProjectById(id);
-                if (projectResponse.Succeeded)
-                    return Ok(projectResponse);
-                else
-                    return BadRequest(projectResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var projectResponse = _projectServices.GetEmployeeProject(loggedInUser.Id, id);
-                if (projectResponse.Succeeded)
-                    return Ok(projectResponse);
-                else
-                    return BadRequest(projectResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
-            }
+            var projectResponse = _projectServices.GetProjectById(id, loggedInUser);
 
+            if (projectResponse.Succeeded)
+                return Ok(projectResponse);
+            return BadRequest(projectResponse);
         }
 
         [HttpPost("CreateProject")]
@@ -105,15 +75,15 @@ namespace EmployeeProject.Controllers
             }
 
             var projectResponse = _projectServices.CreateProject(project);
+
             if (projectResponse.Succeeded)
                 return Ok(projectResponse);
-            else
-                return BadRequest(projectResponse);
+            return BadRequest(projectResponse);
 
         }
 
 
-        [HttpPut("UpdateProject{id:int}")]
+        [HttpPut("UpdateProject")]
         [Authorize(Roles = "Administrator")]
         [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
@@ -127,14 +97,14 @@ namespace EmployeeProject.Controllers
                 return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
             var projectResponse = _projectServices.UpdateProject(project, id);
+
             if (projectResponse.Succeeded)
                 return Ok(projectResponse);
-            else
-                return BadRequest(projectResponse);
+            return BadRequest(projectResponse);
 
         }
 
-        [HttpDelete("DeleteProject{id:int}")]
+        [HttpDelete("DeleteProject")]
         [Authorize(Roles = "Administrator")]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
@@ -142,10 +112,10 @@ namespace EmployeeProject.Controllers
         public IActionResult DeleteProject(int id)
         {
             var projectResponse = _projectServices.DeleteProject(id);
+
             if (projectResponse.Succeeded)
                 return Ok(projectResponse);
-            else
-                return BadRequest(projectResponse);
+            return BadRequest(projectResponse);
 
         }
 
@@ -158,10 +128,10 @@ namespace EmployeeProject.Controllers
         public ActionResult AddEmployeeToProject(int employeeId, int projectId)
         {
             var projectResponse = _projectServices.AddEmployeeToProject(employeeId, projectId);
+
             if (projectResponse.Succeeded)
                 return Ok(projectResponse);
-            else
-                return BadRequest(projectResponse);
+            return BadRequest(projectResponse);
 
         }
 
@@ -173,10 +143,10 @@ namespace EmployeeProject.Controllers
         public ActionResult RemoveEmployeeFromProject(int employeeId, int projectId)
         {
             var projectResponse = _projectServices.RemoveEmployeeFromProject(employeeId, projectId);
+
             if (projectResponse.Succeeded)
                 return Ok(projectResponse);
-            else
-                return BadRequest(projectResponse);
+            return BadRequest(projectResponse);
         }
 
     }

@@ -16,7 +16,6 @@ namespace SharedModels.ViewModels
     {
         [Required]
         public int Id { get; set; }
-
     }
     public class ProjectEditViewModel : ProjectBaseViewModel
     {

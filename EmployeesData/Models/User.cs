@@ -27,7 +27,6 @@ namespace EmployeesData.Models
         public string Email { get; set; }
         [Required]
         public string Address { get; set; }
-        [Required]
         public string Photo { get; set; }
         [Required]
         public int RoleId { get; set; }

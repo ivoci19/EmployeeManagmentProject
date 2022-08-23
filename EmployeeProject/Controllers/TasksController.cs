@@ -41,59 +41,30 @@ namespace EmployeeProject.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var taskResponse = _taskServices.GetAllTasks();
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var tasksResponse = _taskServices.GetAllProjectTasksByUserId(loggedInUser.Id);
+            var taskResponse = _taskServices.GetAllTasks(loggedInUser);
 
-                if (tasksResponse.Succeeded)
-                    return Ok(tasksResponse);
-                else
-                    return BadRequest(tasksResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
-            }
+            if (taskResponse.Succeeded)
+                return Ok(taskResponse);
+            return BadRequest(taskResponse);
+
         }
 
 
-        [HttpGet("GetTask{id:int}")]
+        [HttpGet("GetTask")]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.BadRequest)]
-        [Display(Name = "GetTaskById", Description = "Get Task by Id", GroupName = "Tasks")]
-        public ActionResult<ProjectTask> GetTaskById(int id)
+        [Display(Name = "GetTask", Description = "Get Task by Id", GroupName = "Tasks")]
+        public ActionResult<ProjectTask> GetTask(int id)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var taskResponse = _taskServices.GetTaskById(id);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var taskResponse = _taskServices.GetTaskByIdAndUserId(id, loggedInUser.Id);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
-            }
+            var taskResponse = _taskServices.GetTaskById(id, loggedInUser);
+
+            if (taskResponse.Succeeded)
+                return Ok(taskResponse);
+            return BadRequest(taskResponse);
+
         }
 
         [HttpPost("CreateTask")]
@@ -112,30 +83,15 @@ namespace EmployeeProject.Controllers
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var taskResponse = _taskServices.CreateTask(task);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var taskResponse = _taskServices.CreateTask(task.ProjectId, loggedInUser.Id, task);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
+            var taskResponse = _taskServices.CreateTask(task, loggedInUser);
 
-            }
+            if (taskResponse.Succeeded)
+                return Ok(taskResponse);
+            return BadRequest(taskResponse);
+
         }
 
-        [HttpPut("UpdateTask{id:int}")]
+        [HttpPut("UpdateTask")]
         [Authorize(Roles = "Administrator")]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.BadRequest)]
@@ -148,14 +104,15 @@ namespace EmployeeProject.Controllers
                 var errors = ModelStateHelper.GetErrors(modelErrors);
                 return BadRequest(ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
+
             var taskResponse = _taskServices.UpdateTask(task, id);
+
             if (taskResponse.Succeeded)
                 return Ok(taskResponse);
-            else
-                return BadRequest(taskResponse);
+            return BadRequest(taskResponse);
         }
 
-        [HttpDelete("DeleteTask{id:int}")]
+        [HttpDelete("DeleteTask")]
         [Authorize(Roles = "Administrator")]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
@@ -163,41 +120,46 @@ namespace EmployeeProject.Controllers
         public IActionResult DeleteTask(int id)
         {
             var taskResponse = _taskServices.DeleteTask(id);
+
             if (taskResponse.Succeeded)
                 return Ok(taskResponse);
-            else
-                return BadRequest(taskResponse);
+            return BadRequest(taskResponse);
         }
 
-        [HttpPut("ChangeTaskStatus{id:int}")]
+        [HttpPut("ChangeTaskStatus")]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "ChangeTaskStatus", Description = "Change the status of a task", GroupName = "Tasks")]
-        public IActionResult ChangeTaskStatus(int id, TaskStatusEnum status)
+        public IActionResult ChangeTaskStatus(int taskId, TaskStatusEnum status)
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var loggedInUser = _identityHelper.GetCurrentUser(identity);
 
-            if (loggedInUser.RoleName.ToLower() == "administrator")
-            {
-                var taskResponse = _taskServices.ChangeTaskStatus(loggedInUser.Id, status);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else if (loggedInUser.RoleName.ToLower() == "employee")
-            {
-                var taskResponse = _taskServices.ChangeTaskStatus(id, loggedInUser.Id, status);
-                if (taskResponse.Succeeded)
-                    return Ok(taskResponse);
-                else
-                    return BadRequest(taskResponse);
-            }
-            else
-            {
-                return BadRequest(ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED));
-            }
+            var taskResponse = _taskServices.ChangeTaskStatus(taskId, status, loggedInUser);
+
+            if (taskResponse.Succeeded)
+                return Ok(taskResponse);
+            return BadRequest(taskResponse);
+
         }
+
+        [HttpPut("AssignTaskToEmployee")]
+        [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<ProjectTaskViewModel>), (int)HttpStatusCode.BadRequest)]
+        [Display(Name = "AssignTaskToEmployee", Description = "Assign a task to an employee", GroupName = "Tasks")]
+        public IActionResult AssignTaskToEmployee(int taskId, int employeeId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var loggedInUser = _identityHelper.GetCurrentUser(identity);
+
+            var taskResponse = _taskServices.AssignTaskToEmployee(taskId, employeeId, loggedInUser);
+
+            if (taskResponse.Succeeded)
+                return Ok(taskResponse);
+            return BadRequest(taskResponse);
+
+        }
+
+
     }
 }

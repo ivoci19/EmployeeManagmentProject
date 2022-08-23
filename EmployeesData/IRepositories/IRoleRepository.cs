@@ -1,13 +1,13 @@
 ﻿using EmployeesData.Models;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace EmployeesData.IRepositories
 {
     public interface IRoleRepository
     {
-        List<Role> Roles { get; }
+        IQueryable<Role> Roles { get; }
         public void SaveRole(Role role);
-        public bool DeleteRole(int id);
-        public Role GetRoleById(int id);
+        public bool DeleteRole(int roleId);
+        public Role GetRoleById(int roleId);
     }
 }

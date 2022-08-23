@@ -1,7 +1,6 @@
 ﻿using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace EmployeesData.Repositories
@@ -14,13 +13,13 @@ namespace EmployeesData.Repositories
         {
             _applicationDbContext = applicationDbContext;
         }
-        public List<Role> Roles
+        public IQueryable<Role> Roles
         {
             get
             {
                 return _applicationDbContext.Roles
                          .Include(i => i.Users)
-                         .Where(i => i.IsActive).ToList();
+                         .Where(i => i.IsActive);
             }
         }
 
@@ -28,31 +27,26 @@ namespace EmployeesData.Repositories
         {
             if (role.Id == 0)
             {
+                role.IsActive = true;
                 _applicationDbContext.Roles.Add(role);
             }
             _applicationDbContext.SaveChanges();
         }
 
-        public bool DeleteRole(int id)
+        public bool DeleteRole(int roleId)
         {
-            Role role = Roles.Where(i => i.Id == id && i.IsActive).FirstOrDefault();
-
-            if (role != null)
-            {
-                role.IsActive = false;
-                _applicationDbContext.SaveChanges();
-                return true;
-            }
-            return false;
+            Role role = Roles.Where(i => i.Id == roleId && i.IsActive).FirstOrDefault();
+            role.IsActive = false;
+            _applicationDbContext.SaveChanges();
+            return true;
         }
-
 
         public Role GetRoleById(int roleId)
         {
-            var query = _applicationDbContext.Roles.AsQueryable();
+            var rolesQuery = _applicationDbContext.Roles.AsQueryable();
 
-            query = query.Include(i => i.Users).Where(u => u.Id == roleId && u.IsActive);
-            var user = query.FirstOrDefault();
+            rolesQuery = rolesQuery.Include(i => i.Users).Where(u => u.Id == roleId && u.IsActive);
+            var user = rolesQuery.FirstOrDefault();
             return user;
         }
     }

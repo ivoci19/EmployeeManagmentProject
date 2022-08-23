@@ -19,47 +19,44 @@ namespace EmployeeProject.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserServices _userServices;
-        private readonly IProjectServices _projectServices;
-        private readonly ITaskServices _taskServices;
-        public UserController(IUserServices userServices, IProjectServices projectServices, ITaskServices taskServices)
+
+        public UserController(IUserServices userServices)
         {
             _userServices = userServices;
-            _projectServices = projectServices;
-            _taskServices = taskServices;
         }
 
         [HttpGet("GetAllUsers")]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
-        [Display(Name = "GetAllProjects", Description = "Get all Users", GroupName = "Users")]
+        [Display(Name = "GetAllUsers", Description = "Get all Users", GroupName = "Users")]
         public IActionResult GetAllUsers()
         {
             var userResponse = _userServices.GetAllUsers();
+
             if (userResponse.Succeeded)
                 return Ok(userResponse);
-            else
-                return BadRequest(userResponse);
+            return BadRequest(userResponse);
         }
 
 
-        [HttpGet("GetUser{id:int}")]
+        [HttpGet("GetUser")]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "GetUserById", Description = "Get User by Id", GroupName = "Users")]
-        public ActionResult<User> GetUserById(int id)
+        public ActionResult<User> GetUser(int userId)
         {
-            var userResponse = _userServices.GetUserById(id, true, true);
+            var userResponse = _userServices.GetUserById(userId);
+
             if (userResponse.Succeeded)
                 return Ok(userResponse);
-            else
-                return BadRequest(userResponse);
+            return BadRequest(userResponse);
         }
 
         [HttpPost("CreateUser")]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "CreateUser", Description = "Create new User", GroupName = "Users")]
-        public ActionResult CreateUser(UserEditViewModel user)
+        public ActionResult CreateUser(UserEditViewModel userVm)
         {
             if (!ModelState.IsValid)
             {
@@ -68,20 +65,19 @@ namespace EmployeeProject.Controllers
                 return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
 
-            var userResponse = _userServices.CreateUser(user);
+            var userResponse = _userServices.CreateUser(userVm);
 
             if (userResponse.Succeeded)
                 return Ok(userResponse);
-            else
-                return BadRequest(userResponse);
+            return BadRequest(userResponse);
 
         }
 
-        [HttpPut("UpdateUser{id:int}")]
+        [HttpPut("UpdateUser")]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<UserViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "UpdateUser", Description = "Update new User", GroupName = "Users")]
-        public IActionResult UpdateUser(int id, UserEditViewModel user)
+        public IActionResult UpdateUser([FromQuery] int id, [FromBody] UserEditViewModel userVm)
         {
             if (!ModelState.IsValid)
             {
@@ -89,24 +85,25 @@ namespace EmployeeProject.Controllers
                 var errors = ModelStateHelper.GetErrors(modelErrors);
                 return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, errors));
             }
-            var userResponse = _userServices.UpdateUser(user, id);
+
+            var userResponse = _userServices.UpdateUser(userVm, id);
+
             if (userResponse.Succeeded)
                 return Ok(userResponse);
-            else
-                return BadRequest(userResponse);
+            return BadRequest(userResponse);
         }
 
-        [HttpDelete("DeleteUser{id:int}")]
+        [HttpDelete("DeleteUser")]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "DeleteUser", Description = "Delete a User", GroupName = "Users")]
-        public IActionResult DeleteUser(int id)
+        public IActionResult DeleteUser(int userId)
         {
-            var userResponse = _userServices.DeleteUser(id);
+            var userResponse = _userServices.DeleteUser(userId);
+
             if (userResponse.Succeeded)
                 return Ok(userResponse);
-            else
-                return BadRequest(userResponse);
+            return BadRequest(userResponse);
         }
     }
 }

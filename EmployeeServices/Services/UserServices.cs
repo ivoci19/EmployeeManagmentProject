@@ -2,6 +2,7 @@
 using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using EmployeeServices.IServices;
+using Microsoft.Extensions.Logging;
 using SharedModels.Enum;
 using SharedModels.Models;
 using SharedModels.ViewModels;
@@ -15,16 +16,14 @@ namespace EmployeeServices.Services
     public class UserServices : IUserServices
     {
         private readonly IUserRepository _userRepository;
-        private readonly IProjectTaskRepository _taskRepository;
-        private readonly IProjectRepository _projectRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
 
-        public UserServices(IUserRepository userRepository, IProjectTaskRepository taskRepository, IProjectRepository projectRepository, IMapper mapper)
+        public UserServices(IUserRepository userRepository, IMapper mapper, ILogger<UserServices> logger)
         {
             _userRepository = userRepository;
-            _taskRepository = taskRepository;
-            _projectRepository = projectRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public ApiResponse<IEnumerable<UserViewModel>> GetAllUsers()
@@ -35,9 +34,9 @@ namespace EmployeeServices.Services
             return ApiResponse<IEnumerable<UserViewModel>>.ApiOkResponse(userVm);
         }
 
-        public ApiResponse<UserViewModel> GetUserById(int id, bool includeProjects, bool includeTasks)
+        public ApiResponse<UserViewModel> GetUserById(int id)
         {
-            User user = _userRepository.GetUserById(id, includeProjects, includeTasks);
+            User user = _userRepository.GetUserById(id);
 
             if (user == null)
                 return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.USER_NOT_FOUND, ErrorMessages.USER_NOT_FOUND);
@@ -51,14 +50,22 @@ namespace EmployeeServices.Services
         {
             try
             {
+                if (_userRepository.IsUsernameUsed(userVm.Username, 0, false))
+                    return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.USERNAME_ALREADY_USED, ErrorMessages.USERNAME_ALREADY_USED);
+
+                if (_userRepository.IsEmailUsed(userVm.Email, 0, false))
+                    return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.EMAIL_ALREADY_USED, ErrorMessages.EMAIL_ALREADY_USED);
+
                 User user = _mapper.Map<User>(userVm);
-                _userRepository.SaveUser(user);
-                var userViewModel = _mapper.Map<UserViewModel>(user);
+                User createdUser = _userRepository.SaveUser(user);
+                var userViewModel = _mapper.Map<UserViewModel>(createdUser);
                 return ApiResponse<UserViewModel>.ApiOkResponse(userViewModel);
+
             }
             catch (Exception e)
             {
-                return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -74,20 +81,17 @@ namespace EmployeeServices.Services
                 if (user.Username == "admin")
                     return ApiResponse<bool>.ApiFailResponse(ErrorCodes.INVALID_REQUEST, ErrorMessages.INVALID_REQUEST);
 
-                IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksByUserId(id);
-
-                foreach (var task in tasks)
-                {
-                    if (task.TaskStatus == TaskStatusEnum.PENDING || task.TaskStatus == TaskStatusEnum.IN_PROGRESS)
-                        return ApiResponse<bool>.ApiFailResponse(ErrorCodes.USER_HAS_OPENED_TASKS, ErrorMessages.USER_HAS_OPENED_TASKS);
-                }
+                var userHasOpenTasks = _userRepository.HasOpenProjectTasks(id);
+                if (userHasOpenTasks)
+                    return ApiResponse<bool>.ApiFailResponse(ErrorCodes.USER_HAS_OPENED_TASKS, ErrorMessages.USER_HAS_OPENED_TASKS);
 
                 _userRepository.DeleteUser(id);
                 return ApiResponse<bool>.ApiOkResponse(true);
             }
             catch (Exception e)
             {
-                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -100,15 +104,23 @@ namespace EmployeeServices.Services
                 if (user == null)
                     return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.USER_NOT_FOUND, ErrorMessages.USER_NOT_FOUND);
 
+                if (_userRepository.IsUsernameUsed(userData.Username, id, true))
+                    return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.USERNAME_ALREADY_USED, ErrorMessages.USERNAME_ALREADY_USED);
+
+                if (_userRepository.IsEmailUsed(userData.Email, id, true))
+                    return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.EMAIL_ALREADY_USED, ErrorMessages.EMAIL_ALREADY_USED);
                 _mapper.Map(userData, user);
-                _userRepository.SaveUser(user);
-                var userVm = _mapper.Map<UserViewModel>(user);
+                if (userData.Password != null)
+                    user.Password = Encryptor.MD5Hash(userData.Password);
+                var updatedUser = _userRepository.SaveUser(user);
+                var userVm = _mapper.Map<UserViewModel>(updatedUser);
                 return ApiResponse<UserViewModel>.ApiOkResponse(userVm);
 
             }
-            catch
+            catch (Exception e)
             {
-                return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -127,13 +139,20 @@ namespace EmployeeServices.Services
             return _mapper.Map<UserViewModel>(user);
         }
 
-        public UserViewModel GetLoggedInUser(string username)
+        public ApiResponse<bool> UpdateUserPhoto(int userId, byte[] photoContent)
         {
-            User user = _userRepository.GetUserByUsername(username);
-            return _mapper.Map<UserViewModel>(user);
+            try
+            {
+                var base64Photo = Convert.ToBase64String(photoContent);
+                _userRepository.UpdateUserPhoto(userId, base64Photo);
+                return ApiResponse<bool>.ApiOkResponse(true);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.SERVER_ERROR);
+            }
+
         }
-
-
-
     }
 }

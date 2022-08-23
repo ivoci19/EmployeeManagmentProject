@@ -15,6 +15,7 @@ namespace EmployeesData
         public DbSet<ProjectTask> ProjectTasks { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+
         public IHttpContextAccessor _httpAccessor;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option, IHttpContextAccessor httpAccessor) : base(option)

@@ -32,23 +32,21 @@ namespace EmployeeProject.Controllers
 
             if (roleResponse.Succeeded)
                 return Ok(roleResponse);
-            else
-                return BadRequest(roleResponse);
+            return BadRequest(roleResponse);
         }
 
 
-        [HttpGet("GetRole{id:int}")]
+        [HttpGet("GetRole")]
         [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
-        [Display(Name = "GetRoleById", Description = "Get Role by Id", GroupName = "Roles")]
-        public ActionResult GetUserById(int id)
+        [Display(Name = "GetRole", Description = "Get Role by Id", GroupName = "Roles")]
+        public ActionResult GetRole(int id)
         {
             var roleResponse = _roleServices.GetRoleById(id);
 
             if (roleResponse.Succeeded)
                 return Ok(roleResponse);
-            else
-                return BadRequest(roleResponse);
+            return BadRequest(roleResponse);
         }
 
         [HttpPost("CreateRole")]
@@ -68,12 +66,11 @@ namespace EmployeeProject.Controllers
 
             if (roleResponse.Succeeded)
                 return Ok(roleResponse);
-            else
-                return BadRequest(roleResponse);
+            return BadRequest(roleResponse);
 
         }
 
-        [HttpPut("UpdateRole{id:int}")]
+        [HttpPut("UpdateRole")]
         [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<RoleViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "UpdateRole", Description = "Update new Role", GroupName = "Roles")]
@@ -90,11 +87,10 @@ namespace EmployeeProject.Controllers
 
             if (roleResponse.Succeeded)
                 return Ok(roleResponse);
-            else
-                return BadRequest(roleResponse);
+            return BadRequest(roleResponse);
         }
 
-        [HttpDelete("DeleteRole{id:int}")]
+        [HttpDelete("DeleteRole")]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "DeleteRole", Description = "Delete a Role", GroupName = "Roles")]
@@ -104,12 +100,7 @@ namespace EmployeeProject.Controllers
 
             if (roleResponse.Succeeded)
                 return Ok(roleResponse);
-            else
-                return BadRequest(roleResponse);
+            return BadRequest(roleResponse);
         }
-
-
-
-
     }
 }

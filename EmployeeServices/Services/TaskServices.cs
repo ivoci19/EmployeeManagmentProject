@@ -2,6 +2,7 @@
 using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using EmployeeServices.IServices;
+using Microsoft.Extensions.Logging;
 using SharedModels.Enum;
 using SharedModels.Models;
 using SharedModels.ViewModels;
@@ -18,51 +19,120 @@ namespace EmployeeServices.Services
         private readonly IProjectRepository _projectRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
 
-        public TaskServices(IProjectTaskRepository taskRepository, IMapper mapper, IProjectRepository projectRepository, IUserRepository userRepository)
+        public TaskServices(IProjectTaskRepository taskRepository, IMapper mapper, IProjectRepository projectRepository,IUserRepository userRepository, ILogger<TaskServices> logger)
         {
             _mapper = mapper;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
             _userRepository = userRepository;
+            _logger = logger;
         }
 
-        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllTasks()
+        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllTasks(UserViewModel user)
         {
-
-            var task = _taskRepository.ProjectTasks;
-            IEnumerable<ProjectTaskViewModel> taskVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(task);
-            if (task == null)
+            if (user.RoleName.ToLower() == "administrator")
             {
-                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                var task = _taskRepository.ProjectTasks;
+                IEnumerable<ProjectTaskViewModel> taskVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(task);
+                if (task == null)
+                {
+                    return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                }
+
+                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(taskVm);
             }
+            else if (user.RoleName.ToLower() == "employee")
+            {
+                IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(user.Id);
+                if (projects == null)
+                    return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.PROJECTS_NOT_FOUND, ErrorMessages.PROJECTS_NOT_FOUND);
 
-            return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(taskVm);
+                IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksOfUserProjects(projects);
+
+                if (tasks == null)
+                    return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASKS_NOT_FOUND, ErrorMessages.TASKS_NOT_FOUND);
+
+                var tasksVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks);
+                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(tasksVm);
+            }
+            else
+            {
+                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+            }
         }
 
-        public ApiResponse<ProjectTaskViewModel> GetTaskById(int id)
+        public ApiResponse<ProjectTaskViewModel> GetTaskById(int taskId, UserViewModel user)
         {
-            ProjectTask task = _taskRepository.GetTaskById(id);
+            if (user.RoleName.ToLower() == "administrator")
+            {
+                ProjectTask task = _taskRepository.GetTaskById(taskId);
 
-            if (task == null)
-                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                if (task == null)
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-            var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
-            var response = ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
-            return response;
+                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                var response = ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                return response;
+            }
+            else if (user.RoleName.ToLower() == "employee")
+            {
+                var task = _taskRepository.GetTaskByIdAndUserId(taskId, user.Id);
+
+                if (task == null)
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+
+                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+            }
+            else
+            {
+                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+            }
         }
 
-        public ApiResponse<ProjectTaskViewModel> CreateTask(ProjectTaskEditViewModel taskVm)
+        public ApiResponse<ProjectTaskViewModel> CreateTask(ProjectTaskEditViewModel taskVm, UserViewModel user)
         {
             try
             {
-                ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
-                _taskRepository.SaveTask(task);
-                var taskViewModel = _mapper.Map<ProjectTaskViewModel>(task);
-                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskViewModel);
+                if (user.RoleName.ToLower() == "administrator")
+                {
+                    if(taskVm.AssignedTo != null)
+                    {
+                        var id = taskVm.AssignedTo ?? default(int);
+                        if (_userRepository.GetUserById(id)==null)
+                            return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
+                    }
+                    if(_projectRepository.GetProjectById(taskVm.ProjectId) == null)
+                    {
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+                    }
+                    ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
+                    _taskRepository.SaveTask(task);
+                    var taskViewModel = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskViewModel);
+                }
+                if (user.RoleName.ToLower() == "employee")
+                {
+                    Project project = _projectRepository.GetProjectByUserId(user.Id, taskVm.ProjectId);
+                    if (project == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
+
+                    ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
+                    _taskRepository.SaveTask(task);
+                    var taskViewModel = _mapper.Map<ProjectTaskViewModel>(task);
+
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskViewModel);
+                }
+                else
+                {
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+                }
             }
             catch (Exception e)
             {
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
                 return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
             }
         }
@@ -83,6 +153,7 @@ namespace EmployeeServices.Services
             }
             catch (Exception e)
             {
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
                 return ApiResponse<bool>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
             }
         }
@@ -107,111 +178,120 @@ namespace EmployeeServices.Services
             }
         }
 
-        public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int id, TaskStatusEnum status)
+        public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int taskId, TaskStatusEnum status, UserViewModel user)
         {
             try
             {
-                ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(p => p.Id == id);
+                if (user.RoleName.ToLower() == "administrator")
+                {
+                    ProjectTask task = _taskRepository.ProjectTasks.FirstOrDefault(p => p.Id == taskId);
 
-                if (task == null)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-                if (task.TaskStatus == TaskStatusEnum.DONE)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_DONE, ErrorMessages.TASK_IS_DONE);
+                    if (task.TaskStatus == TaskStatusEnum.DONE)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_DONE, ErrorMessages.TASK_IS_DONE);
 
-                task.TaskStatus = status;
-                _mapper.Map<ProjectTaskViewModel>(task);
-                _taskRepository.SaveTask(task);
-                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    task.TaskStatus = status;
+                    _mapper.Map<ProjectTaskViewModel>(task);
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
 
-                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                }
+                else if (user.RoleName.ToLower() == "employee")
+                {
+                    ProjectTask task = _taskRepository.GetTaskByIdAndUserId(taskId, user.Id);
+
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.USER_RESTRICTED, ErrorMessages.USER_RESTRICTED);
+
+                    if (task.TaskStatus == TaskStatusEnum.DONE)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_DONE, ErrorMessages.TASK_IS_DONE);
+
+                    task.TaskStatus = status;
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                }
+                else
+                {
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+                }
             }
             catch (Exception e)
             {
-                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
             }
         }
 
-        public ApiResponse<ProjectTaskViewModel> ChangeTaskStatus(int taskId, int userId, TaskStatusEnum status)
+        public ApiResponse<ProjectTaskViewModel> AssignTaskToEmployee(int taskId, int employeeId, UserViewModel userVm)
         {
             try
             {
-                ProjectTask task = _taskRepository.GetTaskByIdAndUserId(taskId, userId);
+                if (userVm.RoleName.ToLower() == "administrator")
+                {
+                    ProjectTask task = _taskRepository.GetTaskById(taskId);
 
-                if (task == null)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.USER_RESTRICTED, ErrorMessages.USER_RESTRICTED);
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-                if (task.TaskStatus == TaskStatusEnum.DONE)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_DONE, ErrorMessages.TASK_IS_DONE);
+                    if (task.AssignedTo != null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
 
-                task.TaskStatus = status;
-                _taskRepository.SaveTask(task);
-                var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
-                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
-            }
-            catch
-            {
-                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
-            }
-        }
+                    if (task.AssignedTo == employeeId)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ALREADY_ASSIGNED, ErrorMessages.TASK_IS_ALREADY_ASSIGNED);
 
-        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetTasksByUserId(int userId)
-        {
-            IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksByUserId(userId);
+                    Project project = _projectRepository.GetProjectByUserId(employeeId, task.ProjectId);
+                    if (project == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_PART_OF_PROJECT, ErrorMessages.EMPLOYEE_NOT_PART_OF_PROJECT);
 
-            if (tasks == null)
-                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASKS_NOT_FOUND, ErrorMessages.TASKS_NOT_FOUND);
+                    task.AssignedTo = employeeId;
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
 
-            var tasksVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks);
-            return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(tasksVm);
-        }
+                }
+                else if (userVm.RoleName.ToLower() == "employee")
+                {
 
-        public ApiResponse<IEnumerable<ProjectTaskViewModel>> GetAllProjectTasksByUserId(int userId)
-        {
-            IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(userId);
-            if (projects == null)
-                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.PROJECTS_NOT_FOUND, ErrorMessages.PROJECTS_NOT_FOUND);
+                    ProjectTask task = _taskRepository.GetTaskById(taskId);
 
-            IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksOfUserProjects(projects);
+                    if (task == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-            if (tasks == null)
-                return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASKS_NOT_FOUND, ErrorMessages.TASKS_NOT_FOUND);
+                    if (task.CreatedBy != userVm.Username)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_CREATED_BY_ANOTHER_USER, ErrorMessages.TASK_CREATED_BY_ANOTHER_USER);
 
-            var tasksVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks);
-            return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(tasksVm);
-        }
+                    if (task.AssignedTo != null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
 
-        public ApiResponse<ProjectTaskViewModel> GetTaskByIdAndUserId(int taskId, int userId)
-        {
-            var task = _taskRepository.GetTaskByIdAndUserId(taskId, userId);
+                    if (task.AssignedTo == employeeId)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ALREADY_ASSIGNED, ErrorMessages.TASK_IS_ALREADY_ASSIGNED);
 
-            if (task == null)
-                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
+                    Project projectEmployee = _projectRepository.GetProjectByUserId(userVm.Id, task.ProjectId);
+                    if (projectEmployee == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
 
-            var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
-            return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
-        }
-        public ApiResponse<ProjectTaskViewModel> CreateTask(int projectId, int employeeId, ProjectTaskEditViewModel taskVm)
-        {
-            try
-            {
-                User employee = _userRepository.GetUserById(employeeId, true, true);
-                if (employee == null)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.USER_NOT_FOUND, ErrorMessages.USER_NOT_FOUND);
+                    Project project = _projectRepository.GetProjectByUserId(employeeId, task.ProjectId);
+                    if (project == null)
+                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_PART_OF_PROJECT, ErrorMessages.EMPLOYEE_NOT_PART_OF_PROJECT);
 
-                Project project = _projectRepository.GetProjectByUserId(employeeId, projectId);
-                if (project == null)
-                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
-
-                ProjectTask task = _mapper.Map<ProjectTask>(taskVm);
-                _taskRepository.SaveTask(task);
-                var taskViewModel = _mapper.Map<ProjectTaskViewModel>(task);
-
-                return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskViewModel);
+                    task.AssignedTo = employeeId;
+                    _taskRepository.SaveTask(task);
+                    var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
+                    return ApiResponse<ProjectTaskViewModel>.ApiOkResponse(taskVm);
+                }
+                else
+                {
+                    return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.UNAUTHORIZED, ErrorMessages.UNAUTHORIZED);
+                }
             }
             catch (Exception e)
             {
-                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
 
             }
         }

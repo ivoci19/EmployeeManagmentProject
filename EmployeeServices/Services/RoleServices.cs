@@ -2,6 +2,7 @@
 using EmployeesData.IRepositories;
 using EmployeesData.Models;
 using EmployeeServices.IServices;
+using Microsoft.Extensions.Logging;
 using SharedModels.Enum;
 using SharedModels.Models;
 using SharedModels.ViewModels;
@@ -15,16 +16,17 @@ namespace EmployeeServices.Services
     {
         private readonly IRoleRepository _roleRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
 
-        public RoleServices(IRoleRepository roleRepository, IMapper mapper)
+        public RoleServices(IRoleRepository roleRepository, IMapper mapper, ILogger<RoleServices> logger)
         {
             _roleRepository = roleRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public ApiResponse<IEnumerable<RoleViewModel>> GetAllRoles()
         {
-
             var role = _roleRepository.Roles;
             IEnumerable<RoleViewModel> roleVm = _mapper.Map<IEnumerable<RoleViewModel>>(role);
             if (role == null)
@@ -58,7 +60,8 @@ namespace EmployeeServices.Services
             }
             catch (Exception e)
             {
-                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -79,7 +82,8 @@ namespace EmployeeServices.Services
             }
             catch (Exception e)
             {
-                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<bool>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -97,9 +101,10 @@ namespace EmployeeServices.Services
                 var roleVm = _mapper.Map<RoleViewModel>(role);
                 return ApiResponse<RoleViewModel>.ApiOkResponse(roleVm);
             }
-            catch
+            catch (Exception e)
             {
-                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.CHANGES_NOT_SAVED);
+                _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
+                return ApiResponse<RoleViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
             }
         }
 
