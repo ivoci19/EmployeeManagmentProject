@@ -11,7 +11,7 @@ namespace EmployeeServices.IServices
         public ApiResponse<ProjectViewModel> CreateProject(ProjectEditViewModel projectVm);
         public ApiResponse<ProjectViewModel> UpdateProject(ProjectEditViewModel projectData, int id);
         public ApiResponse<bool> DeleteProject(int id);
-        public ApiResponse<ProjectViewModel> AddEmployeeToProject(int employeeId, int projectId);
+        public ApiResponse<AllDataProjectViewModel> AddEmployeeToProject(int employeeId, int projectId);
         public ApiResponse<bool> RemoveEmployeeFromProject(int employeeId, int projectId);
 
     }

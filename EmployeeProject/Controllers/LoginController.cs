@@ -72,6 +72,5 @@ namespace EmployeeProject.Controllers
             return user;
         }
 
-
     }
 }

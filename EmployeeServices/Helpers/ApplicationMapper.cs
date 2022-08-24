@@ -15,6 +15,7 @@ namespace EmployeeServices.Helpers
             CreateMap<User, AllDataUserViewModel>()
                 .ForPath(dest => dest.Projects, act => act.MapFrom(src => src.Projects))
                 .ForPath(dest => dest.ProjectTasks, act => act.MapFrom(src => src.ProjectTasks));
+            CreateMap<User, EmployeeViewModel>();
 
             CreateMap<Project, ProjectViewModel>();
             CreateMap<ProjectEditViewModel, Project>();

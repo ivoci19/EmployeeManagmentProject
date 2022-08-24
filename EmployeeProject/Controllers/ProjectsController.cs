@@ -122,8 +122,8 @@ namespace EmployeeProject.Controllers
 
         [HttpPut("AddEmployeeToProject")]
         [Authorize(Roles = "Administrator")]
-        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ApiResponse<ProjectViewModel>), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataProjectViewModel>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<AllDataProjectViewModel>), (int)HttpStatusCode.BadRequest)]
         [Display(Name = "AddEmployeeToProject", Description = "Add Employee to Project", GroupName = "Projects")]
         public ActionResult AddEmployeeToProject(int employeeId, int projectId)
         {

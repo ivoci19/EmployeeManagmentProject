@@ -27,8 +27,9 @@
         public static string EMAIL_ALREADY_USED = "This email is already used!";
         public static string CODE_ALREADY_USED = "This project code is already used!";
         public static string EMPLOYEE_NOT_FOUND = "Employee not found!";
-        public static string EMPLOYEE_HAS_OPENED_TASKS = "This employee cannot be deleted from project because he has opened tasks!";
+        public static string EMPLOYEE_HAS_OPEN_TASKS = "This employee cannot be removed from project because he has open tasks!";
         public static string SERVER_ERROR = "Server error!";
         public static string ASSIGNING_NOT_POSSIBLE = "You can't assign this task to another employee!";
+        public static string PHOTO_NULL = "You should upload the photo";
     }
 }

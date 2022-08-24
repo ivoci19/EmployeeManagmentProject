@@ -21,10 +21,10 @@ namespace SharedModels.ViewModels
     public class ProjectEditViewModel : ProjectBaseViewModel
     {
     }
-
+    //View Model only for Get Project by Id, when you want all the project data
     public class AllDataProjectViewModel : ProjectViewModel
     {
         public ICollection<ProjectTaskViewModel> ProjectTasks { get; set; }
-        public ICollection<UserViewModel> Users { get; set; }
+        public ICollection<EmployeeViewModel> Users { get; set; }
     }
 }

@@ -31,7 +31,6 @@ namespace EmployeeServices.Services
         {
             if (user.RoleName.ToLower() == "administrator")
             {
-
                 var project = _projectRepository.Projects;
                 IEnumerable<ProjectViewModel> projectVm = _mapper.Map<IEnumerable<ProjectViewModel>>(project);
 
@@ -39,10 +38,8 @@ namespace EmployeeServices.Services
             }
             else if (user.RoleName.ToLower() == "employee")
             {
+                //Get only the projects that the employee is part of
                 IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(user.Id);
-
-                if (projects == null)
-                    return ApiResponse<IEnumerable<ProjectViewModel>>.ApiFailResponse(ErrorCodes.PROJECTS_NOT_FOUND, ErrorMessages.PROJECTS_NOT_FOUND);
 
                 var projectVm = _mapper.Map<IEnumerable<ProjectViewModel>>(projects);
 
@@ -70,9 +67,8 @@ namespace EmployeeServices.Services
             }
             else if (user.RoleName.ToLower() == "employee")
             {
-                IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(user.Id);
-
-                Project project = projects.Where(p => p.Id == projectId).FirstOrDefault();
+                //This method gets the project by project id and the logged in user Id
+                var project = _projectRepository.GetProjectByUserId(user.Id, projectId);
 
                 if (project == null)
                     return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
@@ -159,30 +155,33 @@ namespace EmployeeServices.Services
             }
         }
 
-        public ApiResponse<ProjectViewModel> AddEmployeeToProject(int employeeId, int projectId)
+        public ApiResponse<AllDataProjectViewModel> AddEmployeeToProject(int employeeId, int projectId)
         {
             try
             {
+                //Checks for the employee in the database
                 User employee = _userRepository.GetUserById(employeeId);
                 if (employee == null)
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
+                    return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
 
+                //Checks for the project in the database
                 Project project = _projectRepository.GetProjectById(projectId);
                 if (project == null)
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
+                    return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
 
+                //Checks if the employee is part of the project already
                 if (_projectRepository.GetProjectByUserId(employeeId, projectId) != null)
-                    return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_IS_IN_PROJECT, ErrorMessages.EMPLOYEE_IS_IN_PROJECT);
+                    return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_IS_IN_PROJECT, ErrorMessages.EMPLOYEE_IS_IN_PROJECT);
 
                 Project updatedProject = _projectRepository.AddEmployeeToProject(employeeId, projectId, employee, project);
-                ProjectViewModel projectVm = _mapper.Map<ProjectViewModel>(updatedProject);
+                var projectVm = _mapper.Map<AllDataProjectViewModel>(updatedProject);
 
-                return ApiResponse<ProjectViewModel>.ApiOkResponse(projectVm);
+                return ApiResponse<AllDataProjectViewModel>.ApiOkResponse(projectVm);
             }
             catch (Exception e)
             {
                 _logger.LogError(DateTime.Now + " " + e.Message + " " + e.StackTrace);
-                return ApiResponse<ProjectViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
+                return ApiResponse<AllDataProjectViewModel>.ApiFailResponse(ErrorCodes.CHANGES_NOT_SAVED, ErrorMessages.SERVER_ERROR);
             }
         }
 
@@ -190,16 +189,19 @@ namespace EmployeeServices.Services
         {
             try
             {
+                //Checks if the employee exists in the database
                 User employee = _userRepository.GetUserById(employeeId);
                 if (employee == null)
                     return ApiResponse<bool>.ApiFailResponse(ErrorCodes.EMPLOYEE_NOT_FOUND, ErrorMessages.EMPLOYEE_NOT_FOUND);
 
+                //Checks if the project exists in the database
                 Project project = _projectRepository.GetProjectById(projectId);
                 if (project == null)
                     return ApiResponse<bool>.ApiFailResponse(ErrorCodes.PROJECT_NOT_FOUND, ErrorMessages.PROJECT_NOT_FOUND);
 
+                //Checks if the employee has open tasks in this project
                 if (_userRepository.HasOpenProjectTasks(employeeId, projectId))
-                    return ApiResponse<bool>.ApiFailResponse(ErrorCodes.EMPLOYEE_HAS_OPENED_TASKS, ErrorMessages.EMPLOYEE_HAS_OPENED_TASKS);
+                    return ApiResponse<bool>.ApiFailResponse(ErrorCodes.EMPLOYEE_HAS_OPEN_TASKS, ErrorMessages.EMPLOYEE_HAS_OPEN_TASKS);
 
                 Project updatedProject = _projectRepository.RemoveEmployeeFromProject(employeeId, projectId, employee);
                 return ApiResponse<bool>.ApiOkResponse(true);

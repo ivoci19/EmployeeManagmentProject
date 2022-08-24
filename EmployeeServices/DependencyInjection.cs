@@ -8,6 +8,7 @@ namespace EmployeeServices
 {
     public static class DependencyInjection
     {
+        //Extension method of IServiceCollection
         public static void AddEmployeeServices(this IServiceCollection services)
         {
             services.AddScoped<IUserRepository, UserRepository>();

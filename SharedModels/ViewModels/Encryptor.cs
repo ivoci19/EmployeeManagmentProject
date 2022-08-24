@@ -5,12 +5,13 @@ namespace SharedModels.ViewModels
 {
     public static class Encryptor
     {
-        public static string MD5Hash(string text)
+        //Method that hashes the password before saving it in database
+        public static string MD5Hash(string password)
         {
             MD5 md5 = new MD5CryptoServiceProvider();
 
             //compute hash from the bytes of text  
-            md5.ComputeHash(ASCIIEncoding.ASCII.GetBytes(text));
+            md5.ComputeHash(ASCIIEncoding.ASCII.GetBytes(password));
 
             //get hash result after compute it  
             byte[] result = md5.Hash;

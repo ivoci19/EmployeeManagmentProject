@@ -27,7 +27,7 @@ namespace EmployeesData.Repositories
 
         public ProjectTask GetTaskById(int taskId)
         {
-            ProjectTask projectTask = ProjectTasks.Where(i => i.Id == taskId).FirstOrDefault();
+            ProjectTask projectTask = ProjectTasks.FirstOrDefault();
             return projectTask;
         }
 

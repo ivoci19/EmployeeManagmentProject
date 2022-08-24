@@ -39,10 +39,17 @@ namespace SharedModels.ViewModels
         public string Photo { get; set; }
     }
 
+    //View model only for GetUserById
     public class AllDataUserViewModel : UserBaseViewModel
     {
         public ICollection<ProjectViewModel> Projects { get; set; }
         public ICollection<ProjectTaskViewModel> ProjectTasks { get; set; }
     }
 
+    public class EmployeeViewModel : UserBaseViewModel
+    {
+        [Required]
+        public int Id { get; set; }
+
+    }
 }

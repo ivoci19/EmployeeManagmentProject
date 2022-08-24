@@ -22,7 +22,6 @@ namespace SharedModels.ViewModels
         public string ProjectName { get; set; }
 
     }
-
     public class ProjectTaskEditViewModel : ProjectTaskBaseViewModel
     {
         public int? AssignedTo { get; set; }

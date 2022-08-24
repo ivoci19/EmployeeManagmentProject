@@ -82,6 +82,9 @@ namespace EmployeeProject.Controllers
                 if (employee == null)
                     return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.BAD_REQUEST, ErrorMessages.USER_NOT_FOUND));
 
+                if (photo == null)
+                    return BadRequest(ApiResponse<UserViewModel>.ApiFailResponse(ErrorCodes.PHOTO_NULL, ErrorMessages.PHOTO_NULL));
+
                 var userId = employee.Id;
 
                 using (var memoryStream = new MemoryStream())

@@ -45,14 +45,9 @@ namespace EmployeeServices.Services
             }
             else if (user.RoleName.ToLower() == "employee")
             {
+                //Employee can get all the tasks of the projects he is part of
                 IEnumerable<Project> projects = _projectRepository.GetProjectsByUserId(user.Id);
-                if (projects == null)
-                    return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.PROJECTS_NOT_FOUND, ErrorMessages.PROJECTS_NOT_FOUND);
-
                 IEnumerable<ProjectTask> tasks = _taskRepository.GetTasksOfUserProjects(projects);
-
-                if (tasks == null)
-                    return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiFailResponse(ErrorCodes.TASKS_NOT_FOUND, ErrorMessages.TASKS_NOT_FOUND);
 
                 var tasksVm = _mapper.Map<IEnumerable<ProjectTaskViewModel>>(tasks);
                 return ApiResponse<IEnumerable<ProjectTaskViewModel>>.ApiOkResponse(tasksVm);
@@ -219,10 +214,14 @@ namespace EmployeeServices.Services
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.EMPLOYEE_ISNT_IN_PROJECT, ErrorMessages.EMPLOYEE_ISNT_IN_PROJECT);
 
                     //Employee cannot assign this task to another person 
-                    if (taskData.AssignedTo != null)
-                    {
+                    if (taskData.AssignedTo != user.Id)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.ASSIGNING_NOT_POSSIBLE, ErrorMessages.ASSIGNING_NOT_POSSIBLE);
-                    }
+
+                    //Task assign to will have the value of the logged in User
+                    //If he wants to change the assign he should do the AssignTaskToEmployee method
+                    if (taskData.AssignedTo == null)
+                        taskData.AssignedTo = user.Id;
+
                     _mapper.Map(taskData, task);
                     _taskRepository.SaveTask(task);
                     var taskVm = _mapper.Map<ProjectTaskViewModel>(task);
@@ -250,6 +249,7 @@ namespace EmployeeServices.Services
                     if (task == null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
+                    //If the task status is done the administrator cannot change it 
                     if (task.TaskStatus == TaskStatusEnum.DONE)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_DONE, ErrorMessages.TASK_IS_DONE);
 
@@ -295,6 +295,7 @@ namespace EmployeeServices.Services
                 {
                     ProjectTask task = _taskRepository.GetTaskById(taskId);
 
+                    //Checking if the task is found in database
                     if (task == null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
@@ -319,12 +320,9 @@ namespace EmployeeServices.Services
                     if (task == null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_NOT_FOUND, ErrorMessages.TASK_NOT_FOUND);
 
-                    if (task.CreatedBy != userVm.Username)
-                        return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_CREATED_BY_ANOTHER_USER, ErrorMessages.TASK_CREATED_BY_ANOTHER_USER);
-
                     if (task.AssignedTo == employeeId)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ALREADY_ASSIGNED, ErrorMessages.TASK_IS_ALREADY_ASSIGNED);
-                   
+
                     if (task.AssignedTo != null)
                         return ApiResponse<ProjectTaskViewModel>.ApiFailResponse(ErrorCodes.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE, ErrorMessages.TASK_IS_ASSIGNED_TO_ANOTHER_EMPLOYEE);
 

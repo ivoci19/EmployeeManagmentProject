@@ -30,6 +30,7 @@ namespace EmployeesData
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            //Adding unique keyword on models
             builder.Entity<User>()
            .HasIndex(b => b.Username)
            .IsUnique();
@@ -68,11 +69,13 @@ namespace EmployeesData
                 var entity = (IAudit)entry.Entity;
                 var now = DateTime.UtcNow;
 
+                //if we are creating a new entity
                 if (entry.State == EntityState.Added)
                 {
                     entity.CreatedDate = now;
                     entity.CreatedBy = userName;
                 }
+                //if it is in update state
                 else
                 {
                     base.Entry(entity).Property(x => x.CreatedBy).IsModified = false;

@@ -6,6 +6,7 @@ namespace EmployeeProject.Helper
 {
     public class ModelStateHelper
     {
+        //Method that returns the ModelState errors
         public static string GetErrors(List<ModelError> errors)
         {
             var errorMessage = "";

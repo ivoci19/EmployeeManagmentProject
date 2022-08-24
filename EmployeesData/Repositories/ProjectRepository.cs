@@ -28,6 +28,13 @@ namespace EmployeesData.Repositories
             }
         }
 
+
+        public Project GetProjectById(int projectId)
+        {
+            Project project = Projects.Where(i => i.Id == projectId).FirstOrDefault();
+            return project;
+        }
+
         public bool DeleteProject(int projectId)
         {
             Project project = Projects.Where(p => p.Id == projectId).FirstOrDefault();
@@ -51,11 +58,6 @@ namespace EmployeesData.Repositories
             _applicationDbContext.SaveChanges();
         }
 
-        public Project GetProjectById(int projectId)
-        {
-            Project project = Projects.Where(p => p.Id == projectId).FirstOrDefault();
-            return project;
-        }
 
         //This method returns the projects that an employee is assigned to
         public IEnumerable<Project> GetProjectsByUserId(int employeeId)
