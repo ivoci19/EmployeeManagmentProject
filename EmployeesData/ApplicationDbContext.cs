@@ -1,7 +1,6 @@
 ﻿using EmployeesData.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Linq;
 using System.Threading;
@@ -16,9 +15,6 @@ namespace EmployeesData
         public DbSet<ProjectTask> ProjectTasks { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<Department> Departments { get; set; }
-        public DbSet<Salary> Salaries { get; set; }
-
 
         public IHttpContextAccessor _httpAccessor;
 
